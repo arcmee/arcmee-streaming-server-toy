@@ -1,0 +1,48 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./src:/usr/src/app/src
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/mydatabase
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=mydatabase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  media-server:
+    image: illuspas/node-media-server
+    ports:
+      - "1935:1935"
+      - "8000:8000"
+
+  tracker:
+    build:
+      context: ./tracker
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+
+volumes:
+  postgres_data:
