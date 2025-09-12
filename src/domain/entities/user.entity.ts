@@ -1,7 +1,9 @@
 export class User {
   constructor(
     public readonly id: string,
-    public readonly username: string,
-    public readonly email: string
+    public username: string,
+    public email: string,
+    public password?: string,
+    public streamKey?: string,
   ) {}
 }

@@ -4,21 +4,34 @@ import { Server as SocketIOServer } from 'socket.io';
 
 // Infrastructure
 import { PostgresUserRepository } from './infrastructure/persistence/postgres/repositories/PostgresUserRepository';
+import { PostgresStreamRepository } from './infrastructure/persistence/postgres/repositories/PostgresStreamRepository';
 import { UserController } from './infrastructure/web/express/controllers/user.controller';
 import { createApiRoutes } from './infrastructure/web/express/routes';
 
 // Application
 import { GetUserUseCase } from './application/use-cases/user/GetUser.usecase';
+import { CreateUserUseCase } from './application/use-cases/user/CreateUser.usecase';
+import { LoginUserUseCase } from './application/use-cases/user/LoginUser.usecase';
+import { GetChannelInfoUseCase } from './application/use-cases/user/GetChannelInfo.usecase';
 
 // --- COMPOSITION ROOT ---
 // 1. Create instances of infrastructure (lowest level)
 const userRepository = new PostgresUserRepository();
+const streamRepository = new PostgresStreamRepository();
 
 // 2. Create instances of application use cases, injecting dependencies
 const getUserUseCase = new GetUserUseCase(userRepository);
+const createUserUseCase = new CreateUserUseCase(userRepository);
+const loginUserUseCase = new LoginUserUseCase(userRepository);
+const getChannelInfoUseCase = new GetChannelInfoUseCase(userRepository, streamRepository);
 
 // 3. Create instances of web controllers, injecting use cases
-const userController = new UserController(getUserUseCase);
+const userController = new UserController(
+    getUserUseCase,
+    createUserUseCase,
+    loginUserUseCase,
+    getChannelInfoUseCase
+);
 
 // --- SERVER SETUP ---
 const app: Application = express();
