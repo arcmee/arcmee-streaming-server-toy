@@ -15,7 +15,18 @@
 
 ## 2단계: 사용자 및 채널 시스템
 
-- [ ] 미완료
+- [x] **(완료)** 도메인 구체화: `User` 엔티티의 `password`와 `streamKey` 필드를 필수로 변경
+- [x] **(완료)** Prisma 설정 및 초기 마이그레이션 완료
+    - [x] Prisma CLI 설치 및 초기화
+    - [x] `schema.prisma` 정의 (`User`, `Stream` 모델 포함)
+    - [x] `prisma migrate reset` 및 `prisma migrate dev` 실행
+    - [x] `.gitignore` 업데이트
+    - [x] Prisma Client 인스턴스 파일 (`client.ts`) 생성
+- [x] **(완료)** `PostgresUserRepository`를 Prisma를 사용하도록 구현
+- [x] **(완료)** `PostgresStreamRepository`를 Prisma를 사용하도록 구현
+- [x] **(완료)** `CreateUser`, `LoginUser`, `GetChannelInfo` 유스케이스 생성 및 구현
+- [x] **(완료)** JWT 기반 인증 미들웨어 생성
+- [x] **(완료)** 컨트롤러와 라우트를 새로운 유스케이스에 연결
 
 ## 3단계: 실시간 방송 및 상태 관리
 

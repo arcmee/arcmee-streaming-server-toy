@@ -1,25 +1,25 @@
-import { IUserRepository } from '../../../domain/repositories/IUserRepository';
-import { LoginUserInputDto, LoginUserOutputDto } from '../../dtos/user/LoginUser.dto';
+import { IUserRepository } from '../../../../domain/repositories/IUserRepository';
+import { LoginUserDto } from '../../dtos/user/LoginUser.dto';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 
 export class LoginUserUseCase {
   constructor(private readonly userRepository: IUserRepository) {}
 
-  async execute(input: LoginUserInputDto): Promise<LoginUserOutputDto> {
-    const user = await this.userRepository.findByEmail(input.email);
-    if (!user || !user.password) {
-      throw new Error('Invalid email or password.');
+  async execute(dto: LoginUserDto): Promise<{ token: string }> {
+    const user = await this.userRepository.findByEmail(dto.email);
+    if (!user) {
+      throw new Error('Invalid credentials.');
     }
 
-    const isPasswordValid = await bcrypt.compare(input.password, user.password);
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordValid) {
-      throw new Error('Invalid email or password.');
+      throw new Error('Invalid credentials.');
     }
 
-    // In a real app, use a secret from a config file
-    const secret = 'your_jwt_secret'; 
-    const token = jwt.sign({ id: user.id, email: user.email }, secret, {
+    // NOTE: In a real application, use a secure, environment-variable-based secret key.
+    const secretKey = 'your-super-secret-key';
+    const token = jwt.sign({ userId: user.id, email: user.email }, secretKey, {
       expiresIn: '1h',
     });
 
