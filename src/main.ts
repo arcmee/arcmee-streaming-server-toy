@@ -1,4 +1,6 @@
 import express from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import { prisma } from './infrastructure/persistence/postgres/client';
 import { PostgresUserRepository } from './infrastructure/persistence/postgres/repositories/PostgresUserRepository';
 import { GetUserUseCase } from './application/use-cases/user/GetUser.usecase';
@@ -12,17 +14,28 @@ import { UpdateStreamStatusUseCase } from './application/use-cases/stream/Update
 import { GetLiveStreamsUseCase } from './application/use-cases/stream/GetLiveStreams.usecase';
 import { StreamController } from './infrastructure/web/express/controllers/stream.controller';
 import { createStreamRoutes } from './infrastructure/web/express/routes/stream.routes';
+import { ChatHandler } from './infrastructure/web/websocket/Chat.handler';
+import { PostgresChatRepository } from './infrastructure/persistence/postgres/repositories/PostgresChatRepository';
+import { SendMessageUseCase } from './application/use-cases/chat/SendMessage.usecase';
 
 async function main() {
   await prisma.$connect();
   console.log('Prisma connected to database');
 
   const app = express();
+  const httpServer = createServer(app);
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: '*', // In a real production app, restrict this to your frontend's URL
+    },
+  });
+
   app.use(express.json());
 
   // Repositories
   const userRepository = new PostgresUserRepository();
   const streamRepository = new PostgresStreamRepository();
+  const chatRepository = new PostgresChatRepository();
 
   // Use Cases
   const getUserUseCase = new GetUserUseCase(userRepository);
@@ -31,6 +44,7 @@ async function main() {
   const getChannelInfoUseCase = new GetChannelInfoUseCase(userRepository, streamRepository);
   const updateStreamStatusUseCase = new UpdateStreamStatusUseCase(userRepository, streamRepository);
   const getLiveStreamsUseCase = new GetLiveStreamsUseCase(streamRepository);
+  const sendMessageUseCase = new SendMessageUseCase(chatRepository, userRepository);
 
   // Controllers
   const userController = new UserController(
@@ -50,8 +64,12 @@ async function main() {
   app.use('/api/users', userRoutes);
   app.use('/api/streams', streamRoutes);
 
+  // Initialize Socket.IO Chat Handler
+  const chatHandler = new ChatHandler(io, sendMessageUseCase);
+  chatHandler.handleConnection();
+
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 }
