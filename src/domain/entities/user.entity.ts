@@ -3,7 +3,7 @@ export class User {
     public readonly id: string,
     public username: string,
     public email: string,
-    public password?: string,
-    public streamKey?: string,
+    public password: string,
+    public streamKey: string,
   ) {}
 }

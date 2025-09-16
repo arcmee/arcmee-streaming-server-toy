@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String
+  email     String   @unique
+  password  String
+  streamKey String   @unique
+  stream    Stream?
+}
+
+model Stream {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  isLive      Boolean  @default(false)
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String   @unique // A user can have only one stream
+}
