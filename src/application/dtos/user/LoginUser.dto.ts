@@ -1,8 +1,6 @@
-export interface LoginUserInputDto {
-  email: string;
-  password: string;
-}
-
-export interface LoginUserOutputDto {
-  token: string;
+export class LoginUserDto {
+  constructor(
+    public readonly email: string,
+    public readonly password: string,
+  ) {}
 }

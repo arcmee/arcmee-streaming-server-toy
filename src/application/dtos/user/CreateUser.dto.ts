@@ -1,11 +1,9 @@
-export interface CreateUserInputDto {
-  username: string;
-  email: string;
-  password: string;
-}
+import { User } from '../../../domain/entities/user.entity';
 
-export interface CreateUserOutputDto {
-  id: string;
-  username: string;
-  email: string;
+export class CreateUserDto {
+  constructor(
+    public readonly username: string,
+    public readonly email: string,
+    public readonly password: string,
+  ) {}
 }
