@@ -10,6 +10,14 @@ export class PostgresStreamRepository implements IStreamRepository {
     return stream ? new Stream(stream) : null;
   }
 
+  async findAllLive(): Promise<Stream[]> {
+    const liveStreams = await prisma.stream.findMany({
+      where: { isLive: true },
+      include: { user: true }, // Include user data to show who is streaming
+    });
+    return liveStreams.map(s => new Stream({ ...s, user: new User(s.user) }));
+  }
+
   async create(stream: Stream): Promise<Stream> {
     const newStream = await prisma.stream.create({
       data: {
