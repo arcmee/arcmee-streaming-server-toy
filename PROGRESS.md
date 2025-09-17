@@ -23,4 +23,4 @@
 
 ## 5단계: VOD (방송 다시보기) 시스템
 
-- [ ] 미완료
+- [ ] **(진행 중)** VOD 도메인 정의 (`VOD` 엔티티, `IVodRepository`, `IVodProcessingQueue`)
