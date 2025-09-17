@@ -25,4 +25,5 @@
 
 - [x] **(완료)** VOD 도메인 정의 (`VOD` 엔티티, `IVodRepository`, `IVodProcessingQueue`)
 - [x] **(완료)** `UpdateStreamStatus` 유스케이스 수정: 방송 종료 시 VOD 처리 작업 추가
-- [ ] **(진행 중)** `RedisVodProcessingQueue` 구현
+- [x] **(완료)** `RedisVodProcessingQueue` 구현
+- [ ] **(진행 중)** VOD 처리 워커 생성
