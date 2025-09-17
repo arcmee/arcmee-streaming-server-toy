@@ -15,6 +15,7 @@ model User {
   streamKey    String        @unique
   stream       Stream?
   chatMessages ChatMessage[]
+  vods         Vod[]
 }
 
 model Stream {
@@ -25,6 +26,7 @@ model Stream {
   user         User          @relation(fields: [userId], references: [id])
   userId       String        @unique // A user can have only one stream
   chatMessages ChatMessage[]
+  vod          Vod?
 }
 
 model ChatMessage {
@@ -36,3 +38,20 @@ model ChatMessage {
   user      User     @relation(fields: [userId], references: [id])
   userId    String
 }
+
+model Vod {
+  id           String   @id @default(cuid())
+  title        String
+  thumbnailUrl String
+  videoUrl     String
+  duration     Int
+  views        Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  stream   Stream @relation(fields: [streamId], references: [id])
+  streamId String @unique // A stream can have only one VOD
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+}
+
