@@ -18,15 +18,9 @@ import { ChatHandler } from './infrastructure/web/websocket/Chat.handler';
 import { PostgresChatRepository } from './infrastructure/persistence/postgres/repositories/PostgresChatRepository';
 import { SendMessageUseCase } from './application/use-cases/chat/SendMessage.usecase';
 
-import { IVodProcessingQueue } from './domain/repositories/IVodProcessingQueue';
+import { RedisVodProcessingQueue } from './infrastructure/persistence/redis/RedisVodProcessingQueue';
 
-// Temporary In-Memory VOD Processing Queue for demonstration
-const vodProcessingQueue: IVodProcessingQueue = {
-  async add(job: { streamId: string; videoUrl: string }): Promise<void> {
-    console.log('Adding VOD processing job to the queue:', job);
-    // In a real implementation, this would add the job to a persistent queue like Redis/BullMQ.
-  },
-};
+
 
 async function main() {
   await prisma.$connect();
@@ -46,6 +40,7 @@ async function main() {
   const userRepository = new PostgresUserRepository();
   const streamRepository = new PostgresStreamRepository();
   const chatRepository = new PostgresChatRepository();
+  const vodProcessingQueue = new RedisVodProcessingQueue();
 
   // Use Cases
   const getUserUseCase = new GetUserUseCase(userRepository);
