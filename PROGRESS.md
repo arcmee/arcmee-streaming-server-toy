@@ -23,4 +23,5 @@
 
 ## 5단계: VOD (방송 다시보기) 시스템
 
-- [ ] 미완료
+- [x] **(완료)** VOD 도메인 정의 (`VOD` 엔티티, `IVodRepository`, `IVodProcessingQueue`)
+- [ ] **(진행 중)** `UpdateStreamStatus` 유스케이스 수정: 방송 종료 시 VOD 처리 작업 추가
