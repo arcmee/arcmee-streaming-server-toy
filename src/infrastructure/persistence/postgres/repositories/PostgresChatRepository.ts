@@ -1,22 +1,32 @@
-import { IChatRepository } from '../../../../domain/repositories/IChatRepository';
-import { ChatMessage } from '../../../../domain/entities/chat.entity';
-import { prisma } from '../client';
-import { User } from '../../../../domain/entities/user.entity';
+import { PrismaClient, ChatMessage as PrismaChatMessage, User as PrismaUser } from '@prisma/client';
+import { ChatMessage } from '@src/domain/entities/chat.entity';
+import { User } from '@src/domain/entities/user.entity';
+import { IChatRepository } from '@src/domain/repositories/IChatRepository';
 
 export class PostgresChatRepository implements IChatRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  private toDomain(message: PrismaChatMessage & { user?: PrismaUser }): ChatMessage {
+    const msgProps: any = { ...message };
+    if (message.user) {
+      msgProps.user = new User({ ...message.user });
+    }
+    return new ChatMessage(msgProps);
+  }
+
   async create(message: ChatMessage): Promise<ChatMessage> {
-    const newMessage = await prisma.chatMessage.create({
+    const { id, user, ...messageData } = message; // user is optional and shouldn't be in create data
+    const newMessage = await this.prisma.chatMessage.create({
       data: {
-        text: message.text,
-        streamId: message.streamId,
-        userId: message.userId,
+        ...messageData,
+        id: id,
       },
     });
-    return new ChatMessage(newMessage);
+    return this.toDomain(newMessage);
   }
 
   async findByStreamId(streamId: string, limit: number, offset: number): Promise<ChatMessage[]> {
-    const messages = await prisma.chatMessage.findMany({
+    const messages = await this.prisma.chatMessage.findMany({
       where: { streamId },
       take: limit,
       skip: offset,
@@ -24,6 +34,6 @@ export class PostgresChatRepository implements IChatRepository {
       include: { user: true },
     });
 
-    return messages.map(msg => new ChatMessage({ ...msg, user: new User(msg.user) }));
+    return messages.map(msg => this.toDomain(msg));
   }
 }

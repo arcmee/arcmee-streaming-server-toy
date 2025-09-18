@@ -1,7 +1,7 @@
-import { IUserRepository } from '../../../../domain/repositories/IUserRepository';
-import { IStreamRepository } from '../../../../domain/repositories/IStreamRepository';
-import { UpdateStreamStatusDto } from '../../dtos/stream/UpdateStreamStatus.dto';
-import { IVodProcessingQueue } from '../../../../domain/repositories/IVodProcessingQueue';
+import { IUserRepository } from '@src/domain/repositories/IUserRepository';
+import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
+import { UpdateStreamStatusDto } from '@src/application/dtos/stream/UpdateStreamStatus.dto';
+import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
 
 export class UpdateStreamStatusUseCase {
   constructor(

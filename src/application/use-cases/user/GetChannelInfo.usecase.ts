@@ -1,8 +1,8 @@
-import { IUserRepository } from '../../../../domain/repositories/IUserRepository';
-import { IStreamRepository } from '../../../../domain/repositories/IStreamRepository';
-import { GetChannelInfoDto } from '../../dtos/user/GetChannelInfo.dto';
-import { User } from '../../../../domain/entities/user.entity';
-import { Stream } from '../../../../domain/entities/stream.entity';
+import { IUserRepository } from '@src/domain/repositories/IUserRepository';
+import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
+import { GetChannelInfoDto } from '@src/application/dtos/user/GetChannelInfo.dto';
+import { User } from '@src/domain/entities/user.entity';
+import { Stream } from '@src/domain/entities/stream.entity';
 
 interface ChannelInfo {
   user: Omit<User, 'password' | 'streamKey'>;

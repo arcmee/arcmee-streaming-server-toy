@@ -1,7 +1,7 @@
-import { IChatRepository } from '../../../../domain/repositories/IChatRepository';
-import { IUserRepository } from '../../../../domain/repositories/IUserRepository';
-import { ChatMessage } from '../../../../domain/entities/chat.entity';
-import { SendMessageDto } from '../../dtos/chat/SendMessage.dto';
+import { IChatRepository } from '@src/domain/repositories/IChatRepository';
+import { IUserRepository } from '@src/domain/repositories/IUserRepository';
+import { ChatMessage } from '@src/domain/entities/chat.entity';
+import { SendMessageDto } from '@src/application/dtos/chat/SendMessage.dto';
 
 export class SendMessageUseCase {
   constructor(
