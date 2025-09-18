@@ -1,37 +1,59 @@
-import { Worker } from 'bullmq';
+import { Worker, Job } from 'bullmq';
+import { PrismaClient } from '@prisma/client';
+import { PostgresStreamRepository } from '@src/infrastructure/persistence/postgres/repositories/PostgresStreamRepository';
+import { PostgresVodRepository } from '@src/infrastructure/persistence/postgres/repositories/PostgresVodRepository';
+import { ProcessVODUseCase, IProcessVODDTO } from '@src/application/use-cases/vod/ProcessVOD.usecase';
 
-console.log('VOD worker process started');
+// --- 1. Composition Root ---
+console.log('Initializing VOD worker dependencies...');
+const prisma = new PrismaClient();
+const streamRepository = new PostgresStreamRepository(prisma);
+const vodRepository = new PostgresVodRepository(prisma);
+const processVODUseCase = new ProcessVODUseCase(vodRepository, streamRepository);
+console.log('Dependencies initialized.');
 
-const worker = new Worker('vod-processing', async job => {
-  console.log(`Processing VOD job for stream ${job.data.streamId}`);
-  console.log('Job data:', job.data);
+// --- 2. Worker Definition ---
+const connectionOptions = {
+  host: process.env.REDIS_HOST || 'redis', // Use service name for Docker network
+  port: Number(process.env.REDIS_PORT) || 6379,
+};
 
-  // TODO: Implement actual VOD processing logic
-  // 1. Download the recorded stream file (e.g., using ffmpeg)
-  // 2. Transcode to MP4 or other formats
-  // 3. Generate thumbnails
-  // 4. Upload processed files to a storage service (like S3)
-  // 5. Create a VOD record in the database with metadata
-
-  // For now, just simulate a processing time
-  await new Promise(resolve => setTimeout(resolve, 5000));
-
-  console.log(`Finished processing VOD for stream ${job.data.streamId}`);
+const worker = new Worker('vod-processing', async (job: Job<IProcessVODDTO>) => {
+  console.log(`[Worker] Processing VOD job ${job.id} for stream ${job.data.streamId}`);
+  
+  try {
+    await processVODUseCase.execute(job.data);
+    console.log(`[Worker] Finished VOD job ${job.id}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`[Worker] VOD job ${job.id} failed: ${errorMessage}`, error);
+    // Re-throw the error to make the job fail
+    throw error;
+  }
 }, {
-  connection: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: Number(process.env.REDIS_PORT) || 6379,
-  },
-  // It's good practice to limit the number of concurrent jobs
-  concurrency: 5, 
+  connection: connectionOptions,
+  concurrency: 5, // Process up to 5 jobs concurrently
 });
 
+// --- 3. Event Listeners ---
 worker.on('completed', job => {
-  console.log(`Job ${job.id} has completed!`);
+  console.log(`[Worker] Job ${job.id} has completed.`);
 });
 
 worker.on('failed', (job, err) => {
-  console.error(`Job ${job?.id} has failed with error ${err.message}`);
+  console.error(`[Worker] Job ${job?.id} has failed with error: ${err.message}`);
 });
 
-process.on('SIGINT', () => worker.close());
+console.log('VOD worker started and is listening for jobs on the \'vod-processing\' queue...');
+
+// --- 4. Graceful Shutdown ---
+const gracefulShutdown = async () => {
+  console.log('Closing VOD worker...');
+  await worker.close();
+  await prisma.$disconnect();
+  console.log('Worker closed gracefully.');
+  process.exit(0);
+};
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
