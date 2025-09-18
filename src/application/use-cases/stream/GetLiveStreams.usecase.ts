@@ -1,5 +1,5 @@
-import { IStreamRepository } from '../../../../domain/repositories/IStreamRepository';
-import { Stream } from '../../../../domain/entities/stream.entity';
+import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
+import { Stream } from '@src/domain/entities/stream.entity';
 
 export class GetLiveStreamsUseCase {
   constructor(private readonly streamRepository: IStreamRepository) {}

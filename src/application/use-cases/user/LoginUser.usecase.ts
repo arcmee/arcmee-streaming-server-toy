@@ -1,5 +1,5 @@
-import { IUserRepository } from '../../../../domain/repositories/IUserRepository';
-import { LoginUserDto } from '../../dtos/user/LoginUser.dto';
+import { IUserRepository } from '@src/domain/repositories/IUserRepository';
+import { LoginUserDto } from '@src/application/dtos/user/LoginUser.dto';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 

@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { IVodProcessingQueue } from '../../../../domain/repositories/IVodProcessingQueue';
+import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
 
 export class RedisVodProcessingQueue implements IVodProcessingQueue {
   private queue: Queue;
@@ -8,7 +8,7 @@ export class RedisVodProcessingQueue implements IVodProcessingQueue {
     // In a real application, the Redis connection details would come from a config file.
     this.queue = new Queue('vod-processing', {
       connection: {
-        host: process.env.REDIS_HOST || 'localhost',
+        host: process.env.REDIS_HOST || 'redis',
         port: Number(process.env.REDIS_PORT) || 6379,
       },
     });

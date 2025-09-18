@@ -1,39 +1,49 @@
-import { IStreamRepository } from '../../../../domain/repositories/IStreamRepository';
-import { Stream } from '../../../../domain/entities/stream.entity';
-import { prisma } from '../client';
+import { PrismaClient, Stream as PrismaStream } from '@prisma/client';
+import { Stream } from '@src/domain/entities/stream.entity';
+import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
 
 export class PostgresStreamRepository implements IStreamRepository {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  private toDomain(stream: PrismaStream): Stream {
+    return new Stream({ ...stream });
+  }
+
+  async findById(id: string): Promise<Stream | null> {
+    const stream = await this.prisma.stream.findUnique({
+      where: { id },
+    });
+    return stream ? this.toDomain(stream) : null;
+  }
+
   async findByUserId(userId: string): Promise<Stream | null> {
-    const stream = await prisma.stream.findUnique({
+    const stream = await this.prisma.stream.findUnique({
       where: { userId },
     });
-    return stream ? new Stream(stream) : null;
+    return stream ? this.toDomain(stream) : null;
   }
 
   async findAllLive(): Promise<Stream[]> {
-    const liveStreams = await prisma.stream.findMany({
+    const liveStreams = await this.prisma.stream.findMany({
       where: { isLive: true },
-      include: { user: true }, // Include user data to show who is streaming
     });
-    return liveStreams.map(s => new Stream({ ...s, user: new User(s.user) }));
+    return liveStreams.map(this.toDomain);
   }
 
   async create(stream: Stream): Promise<Stream> {
-    const newStream = await prisma.stream.create({
+    const { id, ...streamData } = stream;
+    const newStream = await this.prisma.stream.create({
       data: {
-        id: stream.id,
-        title: stream.title,
-        description: stream.description,
-        isLive: stream.isLive,
-        userId: stream.userId,
-        thumbnailUrl: stream.thumbnailUrl,
+        ...streamData,
+        id: id,
+        thumbnailUrl: stream.thumbnailUrl || null,
       },
     });
-    return new Stream(newStream);
+    return this.toDomain(newStream);
   }
 
   async update(stream: Stream): Promise<Stream> {
-    const updatedStream = await prisma.stream.update({
+    const updatedStream = await this.prisma.stream.update({
       where: { id: stream.id },
       data: {
         title: stream.title,
@@ -42,6 +52,6 @@ export class PostgresStreamRepository implements IStreamRepository {
         thumbnailUrl: stream.thumbnailUrl,
       },
     });
-    return new Stream(updatedStream);
+    return this.toDomain(updatedStream);
   }
 }

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { UpdateStreamStatusUseCase } from '../../../application/use-cases/stream/UpdateStreamStatus.usecase';
-import { GetLiveStreamsUseCase } from '../../../application/use-cases/stream/GetLiveStreams.usecase';
+import { UpdateStreamStatusUseCase } from '@src/application/use-cases/stream/UpdateStreamStatus.usecase';
+import { GetLiveStreamsUseCase } from '@src/application/use-cases/stream/GetLiveStreams.usecase';
 
 export class StreamController {
   constructor(

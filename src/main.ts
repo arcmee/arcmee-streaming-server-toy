@@ -37,9 +37,9 @@ async function main() {
   app.use(express.json());
 
   // Repositories
-  const userRepository = new PostgresUserRepository();
-  const streamRepository = new PostgresStreamRepository();
-  const chatRepository = new PostgresChatRepository();
+  const userRepository = new PostgresUserRepository(prisma);
+  const streamRepository = new PostgresStreamRepository(prisma);
+  const chatRepository = new PostgresChatRepository(prisma);
   const vodProcessingQueue = new RedisVodProcessingQueue();
 
   // Use Cases
