@@ -6,17 +6,11 @@ export class PostgresVodRepository implements IVodRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async create(vod: Vod): Promise<Vod> {
+    const { id, ...vodData } = vod;
     const newVod = await this.prisma.vOD.create({
       data: {
-        id: vod.id,
-        streamId: vod.streamId,
-        userId: vod.userId,
-        title: vod.title,
-        thumbnailUrl: vod.thumbnailUrl,
-        videoUrl: vod.videoUrl,
-        duration: vod.duration,
-        createdAt: vod.createdAt,
-        views: vod.views,
+        ...vodData,
+        id: id || undefined, // Prisma will use default if id is undefined
       },
     });
     return this.toDomain(newVod);
@@ -28,7 +22,7 @@ export class PostgresVodRepository implements IVodRepository {
   }
 
   async findByUserId(userId: string): Promise<Vod[]> {
-    const vods = await this.prisma.vOD.findMany({ 
+    const vods = await this.prisma.vOD.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
