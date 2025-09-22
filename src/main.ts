@@ -1,6 +1,8 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import * as path from 'path';
+
 import { prisma } from './infrastructure/persistence/postgres/client';
 import { PostgresUserRepository } from './infrastructure/persistence/postgres/repositories/PostgresUserRepository';
 import { GetUserUseCase } from './application/use-cases/user/GetUser.usecase';
@@ -17,10 +19,12 @@ import { createStreamRoutes } from './infrastructure/web/express/routes/stream.r
 import { ChatHandler } from './infrastructure/web/websocket/Chat.handler';
 import { PostgresChatRepository } from './infrastructure/persistence/postgres/repositories/PostgresChatRepository';
 import { SendMessageUseCase } from './application/use-cases/chat/SendMessage.usecase';
-
 import { RedisVodProcessingQueue } from './infrastructure/persistence/redis/RedisVodProcessingQueue';
-
-
+import { PostgresVodRepository } from './infrastructure/persistence/postgres/repositories/PostgresVodRepository';
+import { GetVodsByChannelUseCase } from './application/use-cases/vod/GetVodsByChannel.usecase';
+import { GetVodUseCase } from './application/use-cases/vod/GetVod.usecase';
+import { VodController } from './infrastructure/web/express/controllers/vod.controller';
+import { createVodRoutes } from './infrastructure/web/express/routes/vod.routes';
 
 async function main() {
   await prisma.$connect();
@@ -35,11 +39,13 @@ async function main() {
   });
 
   app.use(express.json());
+  app.use('/static', express.static(path.join(__dirname, '../public')));
 
   // Repositories
   const userRepository = new PostgresUserRepository(prisma);
   const streamRepository = new PostgresStreamRepository(prisma);
   const chatRepository = new PostgresChatRepository(prisma);
+  const vodRepository = new PostgresVodRepository(prisma);
   const vodProcessingQueue = new RedisVodProcessingQueue();
 
   // Use Cases
@@ -54,6 +60,8 @@ async function main() {
   );
   const getLiveStreamsUseCase = new GetLiveStreamsUseCase(streamRepository);
   const sendMessageUseCase = new SendMessageUseCase(chatRepository, userRepository);
+  const getVodsByChannelUseCase = new GetVodsByChannelUseCase(vodRepository);
+  const getVodUseCase = new GetVodUseCase(vodRepository);
 
   // Controllers
   const userController = new UserController(
@@ -66,12 +74,15 @@ async function main() {
     updateStreamStatusUseCase,
     getLiveStreamsUseCase
   );
+  const vodController = new VodController(getVodsByChannelUseCase, getVodUseCase);
 
   // Routes
   const userRoutes = createUserRoutes(userController);
   const streamRoutes = createStreamRoutes(streamController);
+  const vodRoutes = createVodRoutes(vodController);
   app.use('/api/users', userRoutes);
   app.use('/api/streams', streamRoutes);
+  app.use('/api/vods', vodRoutes);
 
   // Initialize Socket.IO Chat Handler
   const chatHandler = new ChatHandler(io, sendMessageUseCase);
