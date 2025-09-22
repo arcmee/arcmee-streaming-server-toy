@@ -29,3 +29,7 @@
 - [x] **(완료)** VOD 처리 워커 생성
 - [x] **(완료)** `ProcessVOD` 유스케이스 및 API 구현 (FFmpeg 연동, 스토리지, 빌드 오류 해결)
 
+## 6단계: 자동화된 테스트 구축
+
+- [x] **(완료)** 테스트 프레임워크 설정 (Jest, ts-jest, supertest 설치 및 설정)
+- [x] **(완료)** `user` 도메인 유스케이스 유닛 테스트 작성 (`GetUser`, `CreateUser`, `LoginUser`, `GetChannelInfo`)
