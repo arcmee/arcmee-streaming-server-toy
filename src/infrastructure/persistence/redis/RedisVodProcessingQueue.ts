@@ -5,18 +5,25 @@ export class RedisVodProcessingQueue implements IVodProcessingQueue {
   private queue: Queue;
 
   constructor() {
-    // In a real application, the Redis connection details would come from a config file.
-    this.queue = new Queue('vod-processing', {
-      connection: {
-        host: process.env.REDIS_HOST || 'redis',
-        port: Number(process.env.REDIS_PORT) || 6379,
-      },
+    const connection = {
+      host: process.env.REDIS_URL ? new URL(process.env.REDIS_URL).hostname : 'localhost',
+      port: process.env.REDIS_URL ? parseInt(new URL(process.env.REDIS_URL).port) : 6379,
+    };
+
+    this.queue = new Queue('vod-processing', { connection });
+
+    this.queue.on('error', (error) => {
+        console.error('Redis Queue Error:', error);
     });
+
     console.log('RedisVodProcessingQueue initialized');
   }
 
   async add(job: { streamId: string; videoUrl: string }): Promise<void> {
     await this.queue.add('process-vod', job);
-    console.log(`Added VOD processing job for stream ${job.streamId} to the queue`);
+  }
+
+  async close(): Promise<void> {
+    await this.queue.close();
   }
 }

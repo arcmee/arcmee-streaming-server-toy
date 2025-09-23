@@ -131,3 +131,13 @@
 3.  **큐 구현:** `infrastructure` 계층에 BullMQ를 사용하여 `IVodProcessingQueue` 인터페이스의 구현체인 `RedisVodProcessingQueue` 생성.
 4.  **VOD 워커 생성:** 큐를 리스닝하는 별도의 프로세스(또는 백그라운드 스레드) 생성.
 5.  **VOD 유스케이스 구현:** `ffmpeg` 어댑터를 사용해 비디오를 변환하고 `IVodRepository`로 메타데이터를 저장하는 `ProcessVOD` 유스케이스 구현. 워커는 이 유스케이스를 실행.
+
+### 6단계: 자동화된 테스트 구축
+1.  **테스트 프레임워크 설정:**
+    - `Jest` 테스트 프레임워크와 관련 라이브러리(`ts-jest`, `@types/jest`, `supertest`) 설치.
+    - `jest.config.js` 파일을 생성하고 타입스크립트 및 경로 별칭을 지원하도록 설정.
+    - `package.json`에 `test` 스크립트 추가.
+2.  **유스케이스 유닛 테스트 작성:**
+    - `in-memory` 가짜(fake) 리포지토리를 구현하여 외부 의존성을 제거하고, `application` 계층 유스케이스의 순수 비즈니스 로직을 테스트.
+3.  **API 엔드포인트 E2E 테스트 작성:**
+    - `supertest`를 사용하여 실제 API 엔드포인트를 호출하고, 전체 요청-응답 흐름을 검증.
