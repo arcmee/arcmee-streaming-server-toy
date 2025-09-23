@@ -26,17 +26,18 @@ describe('CreateUserUseCase', () => {
     };
 
     // Act
-    const user = await createUserUseCase.execute(userData);
+    const { user, token } = await createUserUseCase.execute(userData);
 
     // Assert
     expect(user).toBeInstanceOf(User);
     expect(user.id).toBeDefined();
+    expect(token).toBeDefined();
     expect(user.username).toBe('New User');
 
-    const createdUser = await fakeUserRepository.findById(user.id);
+    const createdUser = await fakeUserRepository.findById(user.id!);
     expect(createdUser).toEqual(user);
 
-    const createdStream = await fakeStreamRepository.findByUserId(user.id);
+    const createdStream = await fakeStreamRepository.findByUserId(user.id!);
     expect(createdStream).toBeDefined();
     expect(createdStream?.userId).toBe(user.id);
   });

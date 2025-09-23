@@ -32,10 +32,10 @@ export class UserController {
   async createUser(req: Request, res: Response): Promise<void> {
     try {
       const { username, email, password } = req.body;
-      const user = await this.createUserUseCase.execute({ username, email, password });
+      const { user, token } = await this.createUserUseCase.execute({ username, email, password });
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, streamKey, ...publicUser } = user;
-      res.status(201).json(publicUser);
+      res.status(201).json({ user: publicUser, token });
     } catch (error: any) {
       if (error.message.includes('already exists')) {
         res.status(409).json({ message: error.message });
