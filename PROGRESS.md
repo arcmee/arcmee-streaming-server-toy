@@ -33,3 +33,9 @@
 
 - [x] **(완료)** 테스트 프레임워크 설정 (Jest, ts-jest, supertest 설치 및 설정)
 - [x] **(완료)** `user` 도메인 유스케이스 유닛 테스트 작성 (`GetUser`, `CreateUser`, `LoginUser`, `GetChannelInfo`)
+- [x] **(완료)** `stream` 도메인 유스케이스 유닛 테스트 작성 (`GetLiveStreams`, `UpdateStreamStatus`)
+- [x] **(완료)** `chat` 도메인 유스케이스 유닛 테스트 작성 (`SendMessage`)
+- [x] **(완료)** `vod` 도메인 유스케이스 유닛 테스트 작성 (`GetVod`, `GetVodsByChannel`, `ProcessVOD`)
+- [x] **(완료)** API 엔드포인트 E2E 테스트 작성 (User API - 회원가입, 로그인)
+- [x] **(완료)** API 엔드포인트 E2E 테스트 작성 (Stream API - 방송 목록/상태)
+- [x] **(완료)** API 엔드포인트 E2E 테스트 작성 (VOD API - VOD 목록/조회)

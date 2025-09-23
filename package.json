@@ -9,7 +9,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "dev:worker": "ts-node-dev --respawn --transpile-only src/worker.ts",
     "worker": "node dist/worker.js",
-    "test": "jest"
+    "test": "jest --runInBand"
   },
   "keywords": [],
   "author": "",
