@@ -12,4 +12,9 @@ export class FakeVodProcessingQueue implements IVodProcessingQueue {
   clearJobs() {
     this.jobs = [];
   }
+
+  async close(): Promise<void> {
+    // Do nothing in fake
+    return Promise.resolve();
+  }
 }
