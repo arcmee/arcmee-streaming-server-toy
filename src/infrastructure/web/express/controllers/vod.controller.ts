@@ -12,37 +12,30 @@ export class VodController {
   ) {}
 
   async uploadVod(req: AuthenticatedRequest, res: Response): Promise<Response> {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded.' });
-      }
-
-      if (!req.user) {
-        return res.status(401).json({ message: 'Authentication required.' });
-      }
-
-      const { title, description } = req.body;
-      if (!title) {
-        return res.status(400).json({ message: 'Title is required.' });
-      }
-
-      await this.uploadVodUseCase.execute({
-        userId: req.user.userId,
-        title,
-        description: description || '',
-        originalPath: req.file.path,
-        originalMimeType: req.file.mimetype,
-      });
-
-      return res.status(202).json({ message: 'Upload successful. The video is being processed.' });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      // Make sure to clean up the uploaded file in case of an error
-      if (req.file) {
-        // You might want to add file cleanup logic here, e.g., fs.unlink(req.file.path, ...)
-      }
-      return res.status(500).json({ message: 'Failed to process upload', error: errorMessage });
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded.' });
     }
+
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required.' });
+    }
+
+    const { title, description } = req.body;
+    if (!title) {
+      return res.status(400).json({ message: 'Title is required.' });
+    }
+
+    await this.uploadVodUseCase.execute({
+      userId: req.user.userId,
+      title,
+      description: description || '',
+      originalPath: req.file.path,
+      originalMimeType: req.file.mimetype,
+    });
+
+    return res
+      .status(202)
+      .json({ message: 'Upload successful. The video is being processed.' });
   }
 
   async getVodsByChannel(req: AuthenticatedRequest, res: Response): Promise<Response> {
