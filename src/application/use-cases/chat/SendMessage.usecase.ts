@@ -2,6 +2,8 @@ import { IChatRepository } from '@src/domain/repositories/IChatRepository';
 import { IUserRepository } from '@src/domain/repositories/IUserRepository';
 import { ChatMessage } from '@src/domain/entities/chat.entity';
 import { SendMessageDto } from '@src/application/dtos/chat/SendMessage.dto';
+import { err, ok, Result } from '@src/domain/utils/Result';
+import { UserNotFoundError } from '@src/domain/errors/user.errors';
 
 export class SendMessageUseCase {
   constructor(
@@ -9,10 +11,12 @@ export class SendMessageUseCase {
     private readonly userRepository: IUserRepository,
   ) {}
 
-  async execute(dto: SendMessageDto): Promise<ChatMessage> {
+  async execute(
+    dto: SendMessageDto,
+  ): Promise<Result<ChatMessage, UserNotFoundError>> {
     const user = await this.userRepository.findById(dto.userId);
     if (!user) {
-      throw new Error('User not found');
+      return err(new UserNotFoundError());
     }
 
     const chatMessage = new ChatMessage({
@@ -28,6 +32,6 @@ export class SendMessageUseCase {
     // Attach user object to the message for broadcasting
     savedMessage.user = user;
 
-    return savedMessage;
+    return ok(savedMessage);
   }
 }
