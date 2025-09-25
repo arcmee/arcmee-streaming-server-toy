@@ -14,6 +14,9 @@ jest.mock('fs/promises', () => ({
   rm: jest.fn(),
 }));
 
+import { StreamNotFoundError } from '@src/domain/errors/stream.errors';
+import { VideoProcessingError } from '@src/domain/errors/vod.errors';
+
 describe('ProcessVODUseCase', () => {
   let processVODUseCase: ProcessVODUseCase;
   let fakeVodRepository: FakeVodRepository;
@@ -48,7 +51,10 @@ describe('ProcessVODUseCase', () => {
   afterEach(async () => {
     // Clean up the dummy recording file using the actual fs.rm
     const actualFs = jest.requireActual('fs/promises');
-    await actualFs.rm(path.dirname(tempRecordingPath), { recursive: true, force: true });
+    await actualFs.rm(path.dirname(tempRecordingPath), {
+      recursive: true,
+      force: true,
+    });
     fakeStorage.clear();
   });
 
@@ -66,31 +72,38 @@ describe('ProcessVODUseCase', () => {
     );
 
     // Act
-    const vod = await processVODUseCase.execute({
+    const result = await processVODUseCase.execute({
       streamId: stream.id,
       recordedFilePath: tempRecordingPath,
     });
 
     // Assert
-    const vodInDb = await fakeVodRepository.findById(vod.id);
-    expect(vodInDb).toBeDefined();
-    expect(vodInDb?.duration).toBe(123.45);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const vodInDb = await fakeVodRepository.findById(result.value.id);
+      expect(vodInDb).toBeDefined();
+      expect(vodInDb?.duration).toBe(123.45);
+    }
 
     // Check that the mocked rm was called for cleanup
     expect(fs.rm).toHaveBeenCalled();
   });
 
-  it('should throw an error if the stream does not exist', async () => {
-    // Act & Assert
-    await expect(
-      processVODUseCase.execute({
-        streamId: 'non-existent-stream',
-        recordedFilePath: tempRecordingPath,
-      }),
-    ).rejects.toThrow('Stream with id non-existent-stream not found.');
+  it('should return a StreamNotFoundError if the stream does not exist', async () => {
+    // Act
+    const result = await processVODUseCase.execute({
+      streamId: 'non-existent-stream',
+      recordedFilePath: tempRecordingPath,
+    });
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(StreamNotFoundError);
+    }
   });
 
-  it('should clean up temporary files even if an error occurs', async () => {
+  it('should return a VideoProcessingError and clean up files if an error occurs', async () => {
     // Arrange
     const stream = await fakeStreamRepository.create(
       new Stream({
@@ -108,14 +121,17 @@ describe('ProcessVODUseCase', () => {
       .spyOn(fakeVideoProcessor, 'transcodeToHLS')
       .mockRejectedValueOnce(new Error('Transcoding failed'));
 
-    // Act & Assert
-    await expect(
-      processVODUseCase.execute({
-        streamId: stream.id,
-        recordedFilePath: tempRecordingPath,
-      }),
-    ).rejects.toThrow('Transcoding failed');
+    // Act
+    const result = await processVODUseCase.execute({
+      streamId: stream.id,
+      recordedFilePath: tempRecordingPath,
+    });
 
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(VideoProcessingError);
+    }
     // Assert that cleanup was still called
     expect(fs.rm).toHaveBeenCalled();
   });

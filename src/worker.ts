@@ -48,13 +48,14 @@ const worker = new Worker('vod-processing', async (job: Job<IProcessVODDTO>) => 
       recordedFilePath,
     };
 
-    await processVODUseCase.execute(jobDataWithFullPath);
-    console.log(`[Worker] Finished VOD job ${job.id}`);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[Worker] VOD job ${job.id} failed: ${errorMessage}`, error);
-    // Re-throw the error to make the job fail
-    throw error;
+    const result = await processVODUseCase.execute(jobDataWithFullPath);
+
+    if (result.ok) {
+      console.log(`[Worker] Finished VOD job ${job.id}`);
+    } else {
+      // Re-throw the error to make the job fail
+      throw result.error;
+    }
   }
 }, {
   connection: connectionOptions,

@@ -2,6 +2,9 @@ import { IUserRepository } from '@src/domain/repositories/IUserRepository';
 import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
 import { UpdateStreamStatusDto } from '@src/application/dtos/stream/UpdateStreamStatus.dto';
 import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
+import { err, ok, Result } from '@src/domain/utils/Result';
+import { UserNotFoundError } from '@src/domain/errors/user.errors';
+import { StreamNotFoundError } from '@src/domain/errors/stream.errors';
 
 export class UpdateStreamStatusUseCase {
   constructor(
@@ -10,16 +13,17 @@ export class UpdateStreamStatusUseCase {
     private readonly vodProcessingQueue: IVodProcessingQueue,
   ) {}
 
-  async execute(dto: UpdateStreamStatusDto): Promise<void> {
+  async execute(
+    dto: UpdateStreamStatusDto,
+  ): Promise<Result<void, UserNotFoundError | StreamNotFoundError>> {
     const user = await this.userRepository.findByStreamKey(dto.streamKey);
     if (!user) {
-      console.warn(`Invalid stream key used: ${dto.streamKey}`);
-      return;
+      return err(new UserNotFoundError());
     }
 
     const stream = await this.streamRepository.findByUserId(user.id);
     if (!stream) {
-      throw new Error(`Stream not found for user ${user.id}`);
+      return err(new StreamNotFoundError(`user id: ${user.id}`));
     }
 
     // If the stream is stopping, add a VOD processing job to the queue.
@@ -33,5 +37,7 @@ export class UpdateStreamStatusUseCase {
     stream.isLive = dto.isLive;
 
     await this.streamRepository.update(stream);
+
+    return ok(undefined);
   }
 }

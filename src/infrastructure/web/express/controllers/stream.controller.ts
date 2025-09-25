@@ -23,24 +23,21 @@ export class StreamController {
       return;
     }
 
-    try {
-      const isLive = event === 'post_publish';
-      await this.updateStreamStatusUseCase.execute({ streamKey, isLive });
+    const isLive = event === 'post_publish';
+    const result = await this.updateStreamStatusUseCase.execute({ streamKey, isLive });
+
+    if (result.ok) {
       res.status(200).json({ message: 'Stream status updated.' });
-    } catch (error: any) {
-      // Log the error but send a generic response
-      console.error('Error updating stream status:', error);
-      res.status(500).json({ message: 'Internal server error.' });
+    } else {
+      // Log the error but send a generic response for security
+      console.error('Error updating stream status from webhook:', result.error);
+      res.status(404).json({ message: 'User or stream not found.' });
     }
   }
 
   async getLiveStreams(req: Request, res: Response): Promise<void> {
-    try {
-      const liveStreams = await this.getLiveStreamsUseCase.execute();
-      res.status(200).json(liveStreams);
-    } catch (error: any) {
-      console.error('Error getting live streams:', error);
-      res.status(500).json({ message: 'Internal server error.' });
-    }
+    const result = await this.getLiveStreamsUseCase.execute();
+    // This use case never returns an error, so we can safely access the value.
+    res.status(200).json(result.value);
   }
 }

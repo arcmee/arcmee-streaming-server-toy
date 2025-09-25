@@ -1,6 +1,7 @@
 import { GetVodUseCase } from '../GetVod.usecase';
 import { FakeVodRepository } from '@src/tests/fakes/FakeVodRepository';
 import { Vod } from '@src/domain/entities/vod.entity';
+import { VodNotFoundError } from '@src/domain/errors/vod.errors';
 
 describe('GetVodUseCase', () => {
   let getVodUseCase: GetVodUseCase;
@@ -31,14 +32,20 @@ describe('GetVodUseCase', () => {
     const result = await getVodUseCase.execute({ vodId: vod.id });
 
     // Assert
-    expect(result).toEqual(vod);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toEqual(vod);
+    }
   });
 
-  it('should return null if the VOD does not exist', async () => {
+  it('should return an error if the VOD does not exist', async () => {
     // Act
     const result = await getVodUseCase.execute({ vodId: 'non-existent-id' });
 
     // Assert
-    expect(result).toBeNull();
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(VodNotFoundError);
+    }
   });
 });

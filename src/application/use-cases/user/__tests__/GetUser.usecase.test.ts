@@ -1,6 +1,8 @@
 import { GetUserUseCase } from '../GetUser.usecase';
 import { FakeUserRepository } from '@src/tests/fakes/FakeUserRepository';
 import { User } from '@src/domain/entities/user.entity';
+import { UserResponseDto } from '@src/application/dtos/user/UserResponse.dto';
+import { UserNotFoundError } from '@src/domain/errors/user.errors';
 
 describe('GetUserUseCase', () => {
   let getUserUseCase: GetUserUseCase;
@@ -11,7 +13,7 @@ describe('GetUserUseCase', () => {
     getUserUseCase = new GetUserUseCase(fakeUserRepository);
   });
 
-  it('should be able to get a user by id', async () => {
+  it('should be able to get a user by id and return a DTO', async () => {
     // Arrange
     const user = new User({
       id: 'user-1',
@@ -26,16 +28,23 @@ describe('GetUserUseCase', () => {
     const result = await getUserUseCase.execute('user-1');
 
     // Assert
-    expect(result).toBeInstanceOf(User);
-    expect(result?.id).toBe('user-1');
-    expect(result?.username).toBe('John Doe');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBeInstanceOf(UserResponseDto);
+      expect(result.value.id).toBe('user-1');
+      expect(result.value.username).toBe('John Doe');
+      expect(result.value).not.toHaveProperty('password');
+    }
   });
 
-  it('should return null if user does not exist', async () => {
+  it('should return an error if user does not exist', async () => {
     // Act
     const result = await getUserUseCase.execute('non-existent-user');
 
     // Assert
-    expect(result).toBeNull();
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(UserNotFoundError);
+    }
   });
 });

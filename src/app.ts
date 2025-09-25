@@ -23,6 +23,7 @@ import { VodController } from './infrastructure/web/express/controllers/vod.cont
 import { createVodRoutes } from './infrastructure/web/express/routes/vod.routes';
 import { PostgresChatRepository } from './infrastructure/persistence/postgres/repositories/PostgresChatRepository';
 import { SendMessageUseCase } from './application/use-cases/chat/SendMessage.usecase';
+import { config } from './infrastructure/config';
 
 export async function createApp() {
   const app = express();
@@ -38,8 +39,12 @@ export async function createApp() {
 
   // Use Cases
   const getUserUseCase = new GetUserUseCase(userRepository);
-  const createUserUseCase = new CreateUserUseCase(userRepository, streamRepository);
-  const loginUserUseCase = new LoginUserUseCase(userRepository);
+  const createUserUseCase = new CreateUserUseCase(
+    userRepository,
+    streamRepository,
+    config,
+  );
+  const loginUserUseCase = new LoginUserUseCase(userRepository, config);
   const getChannelInfoUseCase = new GetChannelInfoUseCase(userRepository, streamRepository);
   const updateStreamStatusUseCase = new UpdateStreamStatusUseCase(
     userRepository,

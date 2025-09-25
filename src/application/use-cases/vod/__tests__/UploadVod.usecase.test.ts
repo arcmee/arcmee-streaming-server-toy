@@ -21,9 +21,10 @@ describe('UploadVodUseCase', () => {
     };
 
     // Act
-    await uploadVodUseCase.execute(dto);
+    const result = await uploadVodUseCase.execute(dto);
 
     // Assert
+    expect(result.ok).toBe(true);
     expect(fakeVodProcessingQueue.jobs).toHaveLength(1);
     expect(fakeVodProcessingQueue.jobs[0]).toEqual(dto);
   });

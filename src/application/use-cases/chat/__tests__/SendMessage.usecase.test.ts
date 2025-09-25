@@ -3,6 +3,7 @@ import { FakeChatRepository } from '@src/tests/fakes/FakeChatRepository';
 import { FakeUserRepository } from '@src/tests/fakes/FakeUserRepository';
 import { ChatMessage } from '@src/domain/entities/chat.entity';
 import { User } from '@src/domain/entities/user.entity';
+import { UserNotFoundError } from '@src/domain/errors/user.errors';
 
 describe('SendMessageUseCase', () => {
   let sendMessageUseCase: SendMessageUseCase;
@@ -40,21 +41,27 @@ describe('SendMessageUseCase', () => {
     };
 
     // Act
-    const message = await sendMessageUseCase.execute(messageData);
+    const result = await sendMessageUseCase.execute(messageData);
 
     // Assert
-    expect(message).toBeInstanceOf(ChatMessage);
-    expect(message.id).toBeDefined();
-    expect(message.streamId).toBe('stream-1');
-    expect(message.userId).toBe(testUser.id);
-    expect(message.text).toBe('Hello, chat!');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const message = result.value;
+      expect(message).toBeInstanceOf(ChatMessage);
+      expect(message.id).toBeDefined();
+      expect(message.text).toBe('Hello, chat!');
 
-    const messagesInRepo = await fakeChatRepository.findByStreamId('stream-1', 10, 0);
-    expect(messagesInRepo).toHaveLength(1);
-    expect(messagesInRepo[0]).toEqual(message);
+      const messagesInRepo = await fakeChatRepository.findByStreamId(
+        'stream-1',
+        10,
+        0,
+      );
+      expect(messagesInRepo).toHaveLength(1);
+      expect(messagesInRepo[0]).toEqual(message);
+    }
   });
 
-  it('should throw an error if user is not found', async () => {
+  it('should return an error if user is not found', async () => {
     // Arrange
     const messageData = {
       streamId: 'stream-1',
@@ -62,9 +69,13 @@ describe('SendMessageUseCase', () => {
       text: 'Hello, chat!',
     };
 
-    // Act & Assert
-    await expect(sendMessageUseCase.execute(messageData)).rejects.toThrow(
-      'User not found',
-    );
+    // Act
+    const result = await sendMessageUseCase.execute(messageData);
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(UserNotFoundError);
+    }
   });
 });

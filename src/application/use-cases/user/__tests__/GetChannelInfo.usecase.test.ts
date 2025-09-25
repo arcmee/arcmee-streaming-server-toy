@@ -4,6 +4,10 @@ import { FakeStreamRepository } from '@src/tests/fakes/FakeStreamRepository';
 import { User } from '@src/domain/entities/user.entity';
 import { Stream } from '@src/domain/entities/stream.entity';
 
+import { UserNotFoundError } from '@src/domain/errors/user.errors';
+import { ChannelInfoResponseDto } from '@src/application/dtos/user/ChannelInfoResponse.dto';
+import { UserResponseDto } from '@src/application/dtos/user/UserResponse.dto';
+
 describe('GetChannelInfoUseCase', () => {
   let getChannelInfoUseCase: GetChannelInfoUseCase;
   let fakeUserRepository: FakeUserRepository;
@@ -40,42 +44,52 @@ describe('GetChannelInfoUseCase', () => {
 
   it('should be able to get channel information', async () => {
     // Act
-    const channelInfo = await getChannelInfoUseCase.execute({ userId: 'user-1' });
+    const result = await getChannelInfoUseCase.execute({ userId: 'user-1' });
 
     // Assert
-    expect(channelInfo).toBeDefined();
-    expect(channelInfo.user.username).toBe('Test User');
-    expect(channelInfo.stream?.isLive).toBe(false);
-    expect(channelInfo.stream?.title).toBe('Test Stream');
-    expect(channelInfo.stream?.description).toBe('A great stream');
-    expect(channelInfo.user).not.toHaveProperty('password');
-    expect(channelInfo.user).not.toHaveProperty('streamKey');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const channelInfo = result.value;
+      expect(channelInfo).toBeInstanceOf(ChannelInfoResponseDto);
+      expect(channelInfo.user).toBeInstanceOf(UserResponseDto);
+      expect(channelInfo.user.username).toBe('Test User');
+      expect(channelInfo.stream?.title).toBe('Test Stream');
+      expect(channelInfo.user).not.toHaveProperty('password');
+    }
   });
 
-  it('should throw an error if the user does not exist', async () => {
-    // Act & Assert
-    await expect(
-      getChannelInfoUseCase.execute({ userId: 'non-existent-user' }),
-    ).rejects.toThrow('User not found.');
+  it('should return an error if the user does not exist', async () => {
+    // Act
+    const result = await getChannelInfoUseCase.execute({ userId: 'non-existent-user' });
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(UserNotFoundError);
+    }
   });
 
   it('should return null for stream if it does not exist', async () => {
     // Arrange: Create a user without a stream
     const userWithoutStream = new User({
-        id: 'user-2',
-        email: 'test2@example.com',
-        username: 'Test User 2',
-        password: 'password',
-        streamKey: 'key-456',
-      });
+      id: 'user-2',
+      email: 'test2@example.com',
+      username: 'Test User 2',
+      password: 'password',
+      streamKey: 'key-456',
+    });
     await fakeUserRepository.create(userWithoutStream);
 
     // Act
-    const channelInfo = await getChannelInfoUseCase.execute({ userId: 'user-2' });
+    const result = await getChannelInfoUseCase.execute({ userId: 'user-2' });
 
     // Assert
-    expect(channelInfo).toBeDefined();
-    expect(channelInfo.user.username).toBe('Test User 2');
-    expect(channelInfo.stream).toBeNull();
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const channelInfo = result.value;
+      expect(channelInfo).toBeInstanceOf(ChannelInfoResponseDto);
+      expect(channelInfo.user.username).toBe('Test User 2');
+      expect(channelInfo.stream).toBeNull();
+    }
   });
 });

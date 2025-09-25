@@ -2,6 +2,9 @@ import { CreateUserUseCase } from '../CreateUser.usecase';
 import { FakeUserRepository } from '@src/tests/fakes/FakeUserRepository';
 import { FakeStreamRepository } from '@src/tests/fakes/FakeStreamRepository';
 import { User } from '@src/domain/entities/user.entity';
+import { DuplicateUserError } from '@src/domain/errors/user.errors';
+import { StringValue } from 'ms';
+import { UserResponseDto } from '@src/application/dtos/user/UserResponse.dto';
 
 describe('CreateUserUseCase', () => {
   let createUserUseCase: CreateUserUseCase;
@@ -11,13 +14,17 @@ describe('CreateUserUseCase', () => {
   beforeEach(() => {
     fakeUserRepository = new FakeUserRepository();
     fakeStreamRepository = new FakeStreamRepository();
+    const mockConfig = {
+      jwt: { secret: 'test-secret', expiresIn: '1m' as StringValue },
+    };
     createUserUseCase = new CreateUserUseCase(
       fakeUserRepository,
       fakeStreamRepository,
+      mockConfig,
     );
   });
 
-  it('should be able to create a new user and a stream', async () => {
+  it('should be able to create a new user and a stream, and return a DTO', async () => {
     // Arrange
     const userData = {
       email: 'newuser@example.com',
@@ -26,23 +33,28 @@ describe('CreateUserUseCase', () => {
     };
 
     // Act
-    const { user, token } = await createUserUseCase.execute(userData);
+    const result = await createUserUseCase.execute(userData);
 
     // Assert
-    expect(user).toBeInstanceOf(User);
-    expect(user.id).toBeDefined();
-    expect(token).toBeDefined();
-    expect(user.username).toBe('New User');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const { user, token } = result.value;
+      expect(user).toBeInstanceOf(UserResponseDto);
+      expect(user.id).toBeDefined();
+      expect(token).toBeDefined();
+      expect(user.username).toBe('New User');
+      expect(user).not.toHaveProperty('password');
 
-    const createdUser = await fakeUserRepository.findById(user.id!);
-    expect(createdUser).toEqual(user);
+      const createdUserInDb = await fakeUserRepository.findById(user.id!);
+      expect(createdUserInDb).toBeDefined();
 
-    const createdStream = await fakeStreamRepository.findByUserId(user.id!);
-    expect(createdStream).toBeDefined();
-    expect(createdStream?.userId).toBe(user.id);
+      const createdStream = await fakeStreamRepository.findByUserId(user.id!);
+      expect(createdStream).toBeDefined();
+      expect(createdStream?.userId).toBe(user.id);
+    }
   });
 
-  it('should throw an error if user with the same email already exists', async () => {
+  it('should return an error if user with the same email already exists', async () => {
     // Arrange
     const existingUser = new User({
       email: 'existing@example.com',
@@ -58,9 +70,13 @@ describe('CreateUserUseCase', () => {
       password: 'password456',
     };
 
-    // Act & Assert
-    await expect(createUserUseCase.execute(userData)).rejects.toThrow(
-      'User with this email already exists',
-    );
+    // Act
+    const result = await createUserUseCase.execute(userData);
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(DuplicateUserError);
+    }
   });
 });

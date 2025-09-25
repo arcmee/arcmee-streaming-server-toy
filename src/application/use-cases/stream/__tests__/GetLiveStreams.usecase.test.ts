@@ -46,9 +46,12 @@ describe('GetLiveStreamsUseCase', () => {
     const result = await getLiveStreamsUseCase.execute();
 
     // Assert
-    expect(result).toHaveLength(2);
-    expect(result).toEqual(expect.arrayContaining([liveStream1, liveStream2]));
-    expect(result).not.toEqual(expect.arrayContaining([offlineStream]));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toHaveLength(2);
+      expect(result.value).toEqual(expect.arrayContaining([liveStream1, liveStream2]));
+      expect(result.value).not.toEqual(expect.arrayContaining([offlineStream]));
+    }
   });
 
   it('should return an empty array if no live streams are available', async () => {
@@ -67,6 +70,9 @@ describe('GetLiveStreamsUseCase', () => {
     const result = await getLiveStreamsUseCase.execute();
 
     // Assert
-    expect(result).toHaveLength(0);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toHaveLength(0);
+    }
   });
 });
