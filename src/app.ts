@@ -18,6 +18,7 @@ import { RedisVodProcessingQueue } from './infrastructure/persistence/redis/Redi
 import { PostgresVodRepository } from './infrastructure/persistence/postgres/repositories/PostgresVodRepository';
 import { GetVodsByChannelUseCase } from './application/use-cases/vod/GetVodsByChannel.usecase';
 import { GetVodUseCase } from './application/use-cases/vod/GetVod.usecase';
+import { UploadVodUseCase } from './application/use-cases/vod/UploadVod.usecase';
 import { VodController } from './infrastructure/web/express/controllers/vod.controller';
 import { createVodRoutes } from './infrastructure/web/express/routes/vod.routes';
 import { PostgresChatRepository } from './infrastructure/persistence/postgres/repositories/PostgresChatRepository';
@@ -49,19 +50,24 @@ export async function createApp() {
   const sendMessageUseCase = new SendMessageUseCase(chatRepository, userRepository);
   const getVodsByChannelUseCase = new GetVodsByChannelUseCase(vodRepository);
   const getVodUseCase = new GetVodUseCase(vodRepository);
+  const uploadVodUseCase = new UploadVodUseCase(vodProcessingQueue);
 
   // Controllers
   const userController = new UserController(
     getUserUseCase,
     createUserUseCase,
     loginUserUseCase,
-    getChannelInfoUseCase
+    getChannelInfoUseCase,
   );
   const streamController = new StreamController(
     updateStreamStatusUseCase,
-    getLiveStreamsUseCase
+    getLiveStreamsUseCase,
   );
-  const vodController = new VodController(getVodsByChannelUseCase, getVodUseCase);
+  const vodController = new VodController(
+    getVodsByChannelUseCase,
+    getVodUseCase,
+    uploadVodUseCase,
+  );
 
   // Routes
   const userRoutes = createUserRoutes(userController);
