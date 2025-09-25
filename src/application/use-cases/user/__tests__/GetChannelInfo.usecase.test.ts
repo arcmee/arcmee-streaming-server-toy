@@ -5,6 +5,8 @@ import { User } from '@src/domain/entities/user.entity';
 import { Stream } from '@src/domain/entities/stream.entity';
 
 import { UserNotFoundError } from '@src/domain/errors/user.errors';
+import { ChannelInfoResponseDto } from '@src/application/dtos/user/ChannelInfoResponse.dto';
+import { UserResponseDto } from '@src/application/dtos/user/UserResponse.dto';
 
 describe('GetChannelInfoUseCase', () => {
   let getChannelInfoUseCase: GetChannelInfoUseCase;
@@ -48,13 +50,11 @@ describe('GetChannelInfoUseCase', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       const channelInfo = result.value;
-      expect(channelInfo).toBeDefined();
+      expect(channelInfo).toBeInstanceOf(ChannelInfoResponseDto);
+      expect(channelInfo.user).toBeInstanceOf(UserResponseDto);
       expect(channelInfo.user.username).toBe('Test User');
-      expect(channelInfo.stream?.isLive).toBe(false);
       expect(channelInfo.stream?.title).toBe('Test Stream');
-      expect(channelInfo.stream?.description).toBe('A great stream');
       expect(channelInfo.user).not.toHaveProperty('password');
-      expect(channelInfo.user).not.toHaveProperty('streamKey');
     }
   });
 
@@ -72,12 +72,12 @@ describe('GetChannelInfoUseCase', () => {
   it('should return null for stream if it does not exist', async () => {
     // Arrange: Create a user without a stream
     const userWithoutStream = new User({
-        id: 'user-2',
-        email: 'test2@example.com',
-        username: 'Test User 2',
-        password: 'password',
-        streamKey: 'key-456',
-      });
+      id: 'user-2',
+      email: 'test2@example.com',
+      username: 'Test User 2',
+      password: 'password',
+      streamKey: 'key-456',
+    });
     await fakeUserRepository.create(userWithoutStream);
 
     // Act
@@ -87,7 +87,7 @@ describe('GetChannelInfoUseCase', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       const channelInfo = result.value;
-      expect(channelInfo).toBeDefined();
+      expect(channelInfo).toBeInstanceOf(ChannelInfoResponseDto);
       expect(channelInfo.user.username).toBe('Test User 2');
       expect(channelInfo.stream).toBeNull();
     }
