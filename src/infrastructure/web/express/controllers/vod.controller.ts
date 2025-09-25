@@ -46,27 +46,20 @@ export class VodController {
   }
 
   async getVodsByChannel(req: AuthenticatedRequest, res: Response): Promise<Response> {
-    try {
-      const { channelId } = req.params;
-      const vods = await this.getVodsByChannelUseCase.execute({ channelId });
-      return res.status(200).json(vods);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return res.status(500).json({ message: 'Failed to get VODs', error: errorMessage });
-    }
+    const { channelId } = req.params;
+    const result = await this.getVodsByChannelUseCase.execute({ channelId });
+    // This use case never returns an error, so we can safely access the value.
+    return res.status(200).json(result.value);
   }
 
   async getVodById(req: AuthenticatedRequest, res: Response): Promise<Response> {
-    try {
-      const { vodId } = req.params;
-      const vod = await this.getVodUseCase.execute({ vodId });
-      if (!vod) {
-        return res.status(404).json({ message: 'VOD not found' });
-      }
-      return res.status(200).json(vod);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return res.status(500).json({ message: 'Failed to get VOD', error: errorMessage });
+    const { vodId } = req.params;
+    const result = await this.getVodUseCase.execute({ vodId });
+
+    if (result.ok) {
+      return res.status(200).json(result.value);
+    } else {
+      return res.status(404).json({ message: result.error.message });
     }
   }
 }
