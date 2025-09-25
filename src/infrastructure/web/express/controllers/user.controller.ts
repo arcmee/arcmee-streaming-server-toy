@@ -14,18 +14,13 @@ export class UserController {
   ) {}
 
   async getUser(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const user = await this.getUserUseCase.execute(id);
-      if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { password, streamKey, ...publicUser } = user;
-        res.status(200).json(publicUser);
-      } else {
-        res.status(404).json({ message: 'User not found' });
-      }
-    } catch (error) {
-      res.status(500).json({ message: 'Internal Server Error' });
+    const { id } = req.params;
+    const result = await this.getUserUseCase.execute(id);
+
+    if (result.ok) {
+      res.status(200).json(result.value);
+    } else {
+      res.status(404).json({ message: result.error.message });
     }
   }
 
