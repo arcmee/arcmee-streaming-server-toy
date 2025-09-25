@@ -30,64 +30,53 @@ export class UserController {
   }
 
   async createUser(req: Request, res: Response): Promise<void> {
-    try {
-      const { username, email, password } = req.body;
-      const { user, token } = await this.createUserUseCase.execute({ username, email, password });
+    const { username, email, password } = req.body;
+    const result = await this.createUserUseCase.execute({ username, email, password });
+
+    if (result.ok) {
+      const { user, token } = result.value;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, streamKey, ...publicUser } = user;
       res.status(201).json({ user: publicUser, token });
-    } catch (error: any) {
-      if (error.message.includes('already exists')) {
-        res.status(409).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: 'Internal Server Error' });
-      }
+    } else {
+      res.status(409).json({ message: result.error.message });
     }
   }
 
   async login(req: Request, res: Response): Promise<void> {
-    try {
-      const { email, password } = req.body;
-      const token = await this.loginUserUseCase.execute({ email, password });
-      res.status(200).json(token);
-    } catch (error: any) {
-      if (error.message.includes('Invalid')) {
-        res.status(401).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: 'Internal Server Error' });
-      }
+    const { email, password } = req.body;
+    const result = await this.loginUserUseCase.execute({ email, password });
+
+    if (result.ok) {
+      res.status(200).json(result.value);
+    } else {
+      res.status(401).json({ message: result.error.message });
     }
   }
 
   async getMyChannelInfo(req: AuthenticatedRequest, res: Response): Promise<void> {
-    try {
-      const userId = req.user?.userId;
-      if (!userId) {
-        res.status(401).json({ message: 'Unauthorized' });
-        return;
-      }
-      const channelInfo = await this.getChannelInfoUseCase.execute({ userId });
-      res.status(200).json(channelInfo);
-    } catch (error: any) {
-      if (error.message.includes('not found')) {
-        res.status(404).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: 'Internal Server Error' });
-      }
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+    const result = await this.getChannelInfoUseCase.execute({ userId });
+
+    if (result.ok) {
+      res.status(200).json(result.value);
+    } else {
+      res.status(404).json({ message: result.error.message });
     }
   }
 
   async getChannelInfo(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const channelInfo = await this.getChannelInfoUseCase.execute({ userId: id });
-      res.status(200).json(channelInfo);
-    } catch (error: any) {
-      if (error.message.includes('not found')) {
-        res.status(404).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: 'Internal Server Error' });
-      }
+    const { id } = req.params;
+    const result = await this.getChannelInfoUseCase.execute({ userId: id });
+
+    if (result.ok) {
+      res.status(200).json(result.value);
+    } else {
+      res.status(404).json({ message: result.error.message });
     }
   }
 }

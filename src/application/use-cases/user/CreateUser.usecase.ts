@@ -6,6 +6,8 @@ import * as jwt from 'jsonwebtoken';
 import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
 import { Stream } from '@src/domain/entities/stream.entity';
 import { createId } from '@paralleldrive/cuid2';
+import { err, ok, Result } from '@src/domain/utils/Result';
+import { DuplicateUserError } from '@src/domain/errors/user.errors';
 
 export class CreateUserUseCase {
   constructor(
@@ -13,10 +15,12 @@ export class CreateUserUseCase {
     private readonly streamRepository: IStreamRepository,
   ) {}
 
-  async execute(dto: CreateUserDto): Promise<{ user: User; token: string }> {
+  async execute(
+    dto: CreateUserDto,
+  ): Promise<Result<{ user: User; token: string }, DuplicateUserError>> {
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) {
-      throw new Error('User with this email already exists.');
+      return err(new DuplicateUserError());
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -50,6 +54,6 @@ export class CreateUserUseCase {
       },
     );
 
-    return { user: createdUser, token };
+    return ok({ user: createdUser, token });
   }
 }

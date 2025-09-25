@@ -3,6 +3,8 @@ import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
 import { GetChannelInfoDto } from '@src/application/dtos/user/GetChannelInfo.dto';
 import { User } from '@src/domain/entities/user.entity';
 import { Stream } from '@src/domain/entities/stream.entity';
+import { err, ok, Result } from '@src/domain/utils/Result';
+import { UserNotFoundError } from '@src/domain/errors/user.errors';
 
 interface ChannelInfo {
   user: Omit<User, 'password' | 'streamKey'>;
@@ -15,10 +17,12 @@ export class GetChannelInfoUseCase {
     private readonly streamRepository: IStreamRepository,
   ) {}
 
-  async execute(dto: GetChannelInfoDto): Promise<ChannelInfo> {
+  async execute(
+    dto: GetChannelInfoDto,
+  ): Promise<Result<ChannelInfo, UserNotFoundError>> {
     const user = await this.userRepository.findById(dto.userId);
     if (!user) {
-      throw new Error('User not found.');
+      return err(new UserNotFoundError());
     }
 
     const stream = await this.streamRepository.findByUserId(dto.userId);
@@ -26,9 +30,9 @@ export class GetChannelInfoUseCase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, streamKey, ...publicUser } = user;
 
-    return {
+    return ok({
       user: publicUser,
       stream,
-    };
+    });
   }
 }
