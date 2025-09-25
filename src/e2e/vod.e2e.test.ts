@@ -70,6 +70,32 @@ describe('VOD API (E2E)', () => {
       });
   });
 
+  describe('POST /api/vods/upload', () => {
+    it('should accept a video upload and add a processing job', async () => {
+      // 1. Register and Login to get a token
+      const userCredentials = { email: 'uploader@test.com', password: 'password123', username: 'uploader' };
+      await request(app).post('/api/users/register').send(userCredentials);
+      const loginRes = await request(app).post('/api/users/login').send(userCredentials);
+      const token = loginRes.body.token;
+
+      // 2. Define VOD metadata and file path
+      const vodData = { title: 'My Uploaded VOD', description: 'This is a test upload' };
+      const videoPath = './src/e2e/__tests__/assets/test-video.mp4';
+
+      // 3. Send the upload request
+      const response = await request(app)
+        .post('/api/vods/upload')
+        .set('Authorization', `Bearer ${token}`)
+        .field('title', vodData.title)
+        .field('description', vodData.description)
+        .attach('video', videoPath);
+
+      // 4. Assert the response
+      expect(response.status).toBe(202);
+      expect(response.body.message).toBe('Upload successful. The video is being processed.');
+    });
+  });
+
   describe('GET /api/vods/channel/:channelId', () => {
     it('should return all VODs for a specific channel', async () => {
       const response = await request(app).get(`/api/vods/channel/${user1.id}`);
