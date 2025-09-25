@@ -4,9 +4,13 @@ import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { err, ok, Result } from '@src/domain/utils/Result';
 import { InvalidCredentialsError } from '@src/domain/errors/user.errors';
+import { AppConfig } from '@src/infrastructure/config';
 
 export class LoginUserUseCase {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly config: AppConfig,
+  ) {}
 
   async execute(
     dto: LoginUserDto,
@@ -21,10 +25,8 @@ export class LoginUserUseCase {
       return err(new InvalidCredentialsError());
     }
 
-    // NOTE: In a real application, use a secure, environment-variable-based secret key.
-    const secretKey = 'your-super-secret-key';
-    const token = jwt.sign({ userId: user.id, email: user.email }, secretKey, {
-      expiresIn: '1h',
+    const token = jwt.sign({ userId: user.id, email: user.email }, this.config.jwt.secret, {
+      expiresIn: this.config.jwt.expiresIn,
     });
 
     return ok({ token });

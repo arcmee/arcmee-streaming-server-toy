@@ -8,11 +8,14 @@ import { Stream } from '@src/domain/entities/stream.entity';
 import { createId } from '@paralleldrive/cuid2';
 import { err, ok, Result } from '@src/domain/utils/Result';
 import { DuplicateUserError } from '@src/domain/errors/user.errors';
+import { AppConfig } from '@src/infrastructure/config';
+
 
 export class CreateUserUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly streamRepository: IStreamRepository,
+    private readonly config: AppConfig,
   ) {}
 
   async execute(
@@ -45,12 +48,11 @@ export class CreateUserUseCase {
 
     await this.streamRepository.create(stream);
 
-    const secretKey = 'your-super-secret-key'; // Should be in env vars
     const token = jwt.sign(
       { userId: createdUser.id, email: createdUser.email },
-      secretKey,
+      this.config.jwt.secret,
       {
-        expiresIn: '1h',
+        expiresIn: this.config.jwt.expiresIn,
       },
     );
 

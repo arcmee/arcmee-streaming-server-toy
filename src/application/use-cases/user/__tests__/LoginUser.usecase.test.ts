@@ -8,15 +8,19 @@ import { User } from '@src/domain/entities/user.entity';
 jest.mock('jsonwebtoken');
 
 import { InvalidCredentialsError } from '@src/domain/errors/user.errors';
+import { StringValue } from 'ms';
 
 describe('LoginUserUseCase', () => {
   let loginUserUseCase: LoginUserUseCase;
   let fakeUserRepository: FakeUserRepository;
   const mockedJwtSign = jwt.sign as jest.Mock;
+  const mockConfig = {
+    jwt: { secret: 'test-secret', expiresIn: '1m' as StringValue },
+  };
 
   beforeEach(async () => {
     fakeUserRepository = new FakeUserRepository();
-    loginUserUseCase = new LoginUserUseCase(fakeUserRepository);
+    loginUserUseCase = new LoginUserUseCase(fakeUserRepository, mockConfig);
 
     // Mock setup
     mockedJwtSign.mockReturnValue('fake-jwt-token');
@@ -50,8 +54,8 @@ describe('LoginUserUseCase', () => {
       expect(result.value.token).toBe('fake-jwt-token');
       expect(mockedJwtSign).toHaveBeenCalledWith(
         { userId: 'user-1', email: 'test@example.com' },
-        'your-super-secret-key',
-        { expiresIn: '1h' },
+        mockConfig.jwt.secret,
+        { expiresIn: mockConfig.jwt.expiresIn },
       );
     }
   });
