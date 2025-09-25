@@ -35,9 +35,7 @@ export class UserController {
 
     if (result.ok) {
       const { user, token } = result.value;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password: _, streamKey, ...publicUser } = user;
-      res.status(201).json({ user: publicUser, token });
+      res.status(201).json({ user, token });
     } else {
       res.status(409).json({ message: result.error.message });
     }

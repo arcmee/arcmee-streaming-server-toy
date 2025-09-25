@@ -2,14 +2,14 @@ import { IUserRepository } from '@src/domain/repositories/IUserRepository';
 import { User } from '@src/domain/entities/user.entity';
 import { CreateUserDto } from '@src/application/dtos/user/CreateUser.dto';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
 import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
 import { Stream } from '@src/domain/entities/stream.entity';
 import { createId } from '@paralleldrive/cuid2';
 import { err, ok, Result } from '@src/domain/utils/Result';
 import { DuplicateUserError } from '@src/domain/errors/user.errors';
 import { AppConfig } from '@src/infrastructure/config';
-
+import * as jwt from 'jsonwebtoken';
+import { UserResponseDto } from '@src/application/dtos/user/UserResponse.dto';
 
 export class CreateUserUseCase {
   constructor(
@@ -20,7 +20,7 @@ export class CreateUserUseCase {
 
   async execute(
     dto: CreateUserDto,
-  ): Promise<Result<{ user: User; token: string }, DuplicateUserError>> {
+  ): Promise<Result<{ user: UserResponseDto; token: string }, DuplicateUserError>> {
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) {
       return err(new DuplicateUserError());
@@ -56,6 +56,6 @@ export class CreateUserUseCase {
       },
     );
 
-    return ok({ user: createdUser, token });
+    return ok({ user: UserResponseDto.fromEntity(createdUser), token });
   }
 }
