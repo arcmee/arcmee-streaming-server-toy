@@ -1,20 +1,17 @@
-import { IVodProcessingQueue } from "@src/domain/repositories/IVodProcessingQueue";
+import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
 
 export class FakeVodProcessingQueue implements IVodProcessingQueue {
-  public jobs: { streamId: string; videoUrl: string }[] = [];
+  public jobs: Record<string, any>[] = [];
 
-  async add(job: { streamId: string; videoUrl: string }): Promise<void> {
+  async add(job: Record<string, any>): Promise<void> {
     this.jobs.push(job);
-    return Promise.resolve();
-  }
-
-  // Helper for tests to clear jobs
-  clearJobs() {
-    this.jobs = [];
   }
 
   async close(): Promise<void> {
-    // Do nothing in fake
-    return Promise.resolve();
+    // Nothing to do in the fake implementation
+  }
+
+  clear(): void {
+    this.jobs = [];
   }
 }
