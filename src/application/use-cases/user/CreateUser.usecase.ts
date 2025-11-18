@@ -2,21 +2,28 @@ import { IUserRepository } from '@src/domain/repositories/IUserRepository';
 import { User } from '@src/domain/entities/user.entity';
 import { CreateUserDto } from '@src/application/dtos/user/CreateUser.dto';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
 import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
 import { Stream } from '@src/domain/entities/stream.entity';
 import { createId } from '@paralleldrive/cuid2';
+import { err, ok, Result } from '@src/domain/utils/Result';
+import { DuplicateUserError } from '@src/domain/errors/user.errors';
+import { AppConfig } from '@src/infrastructure/config';
+import * as jwt from 'jsonwebtoken';
+import { UserResponseDto } from '@src/application/dtos/user/UserResponse.dto';
 
 export class CreateUserUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly streamRepository: IStreamRepository,
+    private readonly config: AppConfig,
   ) {}
 
-  async execute(dto: CreateUserDto): Promise<{ user: User; token: string }> {
+  async execute(
+    dto: CreateUserDto,
+  ): Promise<Result<{ user: UserResponseDto; token: string }, DuplicateUserError>> {
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) {
-      throw new Error('User with this email already exists.');
+      return err(new DuplicateUserError());
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -41,15 +48,14 @@ export class CreateUserUseCase {
 
     await this.streamRepository.create(stream);
 
-    const secretKey = 'your-super-secret-key'; // Should be in env vars
     const token = jwt.sign(
       { userId: createdUser.id, email: createdUser.email },
-      secretKey,
+      this.config.jwt.secret,
       {
-        expiresIn: '1h',
+        expiresIn: this.config.jwt.expiresIn,
       },
     );
 
-    return { user: createdUser, token };
+    return ok({ user: UserResponseDto.fromEntity(createdUser), token });
   }
 }

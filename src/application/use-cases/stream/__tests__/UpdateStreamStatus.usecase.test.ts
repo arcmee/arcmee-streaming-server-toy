@@ -4,6 +4,8 @@ import { FakeStreamRepository } from '@src/tests/fakes/FakeStreamRepository';
 import { FakeVodProcessingQueue } from '@src/tests/fakes/FakeVodProcessingQueue';
 import { User } from '@src/domain/entities/user.entity';
 import { Stream } from '@src/domain/entities/stream.entity';
+import { UserNotFoundError } from '@src/domain/errors/user.errors';
+import { StreamNotFoundError } from '@src/domain/errors/stream.errors';
 
 describe('UpdateStreamStatusUseCase', () => {
   let updateStreamStatusUseCase: UpdateStreamStatusUseCase;
@@ -45,17 +47,18 @@ describe('UpdateStreamStatusUseCase', () => {
     });
     await fakeStreamRepository.create(testStream);
 
-    fakeVodProcessingQueue.clearJobs(); // Clear jobs before each test
+    fakeVodProcessingQueue.clear(); // Clear jobs before each test
   });
 
   it('should update stream status to live when stream starts', async () => {
     // Act
-    await updateStreamStatusUseCase.execute({
+    const result = await updateStreamStatusUseCase.execute({
       streamKey: testUser.streamKey,
       isLive: true,
     });
 
     // Assert
+    expect(result.ok).toBe(true);
     const streamInRepo = await fakeStreamRepository.findById(testStream.id);
     expect(streamInRepo?.isLive).toBe(true);
     expect(fakeVodProcessingQueue.jobs).toHaveLength(0);
@@ -67,12 +70,13 @@ describe('UpdateStreamStatusUseCase', () => {
     await fakeStreamRepository.update(testStream);
 
     // Act
-    await updateStreamStatusUseCase.execute({
+    const result = await updateStreamStatusUseCase.execute({
       streamKey: testUser.streamKey,
       isLive: false,
     });
 
     // Assert
+    expect(result.ok).toBe(true);
     const streamInRepo = await fakeStreamRepository.findById(testStream.id);
     expect(streamInRepo?.isLive).toBe(false);
     expect(fakeVodProcessingQueue.jobs).toHaveLength(1);
@@ -82,18 +86,22 @@ describe('UpdateStreamStatusUseCase', () => {
     });
   });
 
-  it('should not throw an error if user is not found (invalid stream key)', async () => {
-    // Act & Assert
-    await expect(
-      updateStreamStatusUseCase.execute({
-        streamKey: 'non-existent-key',
-        isLive: true,
-      }),
-    ).resolves.not.toThrow(); // It should just warn and return, not throw
+  it('should return a UserNotFoundError if user is not found', async () => {
+    // Act
+    const result = await updateStreamStatusUseCase.execute({
+      streamKey: 'non-existent-key',
+      isLive: true,
+    });
+
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(UserNotFoundError);
+    }
   });
 
-  it('should throw an error if stream is not found for the user', async () => {
-    // Arrange: User exists, but streamKey does not match any stream
+  it('should return a StreamNotFoundError if stream is not found for the user', async () => {
+    // Arrange: User exists, but has no stream associated
     const userWithoutStream = new User({
       id: 'user-2',
       email: 'test2@example.com',
@@ -103,22 +111,16 @@ describe('UpdateStreamStatusUseCase', () => {
     });
     await fakeUserRepository.create(userWithoutStream);
 
-    // Act & Assert
-    await expect(
-      updateStreamStatusUseCase.execute({
-        streamKey: userWithoutStream.streamKey,
-        isLive: true,
-      }),
-    ).rejects.toThrow(`Stream not found for user ${userWithoutStream.id}`);
-  });
+    // Act
+    const result = await updateStreamStatusUseCase.execute({
+      streamKey: userWithoutStream.streamKey,
+      isLive: true,
+    });
 
-  it('should not throw an error if streamKey does not match the user stream key but user exists', async () => {
-    // Act & Assert
-    await expect(
-      updateStreamStatusUseCase.execute({
-        streamKey: 'incorrect-key',
-        isLive: true,
-      }),
-    ).resolves.not.toThrow(); // It should just warn and return, not throw
+    // Assert
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toBeInstanceOf(StreamNotFoundError);
+    }
   });
 });

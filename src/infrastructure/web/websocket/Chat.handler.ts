@@ -26,13 +26,14 @@ export class ChatHandler {
       });
 
       socket.on('sendMessage', async (data: { streamId: string; text: string; userId: string }) => {
-        try {
-          const savedMessage = await this.sendMessageUseCase.execute(data);
-          this.io.to(data.streamId).emit('newMessage', savedMessage);
-        } catch (error) {
-          console.error('Error sending message:', error);
+        const result = await this.sendMessageUseCase.execute(data);
+
+        if (result.ok) {
+          this.io.to(data.streamId).emit('newMessage', result.value);
+        } else {
+          console.error('Error sending message:', result.error);
           // Optionally, emit an error event back to the sender
-          socket.emit('error', { message: 'Failed to send message.' });
+          socket.emit('error', { message: result.error.message });
         }
       });
 

@@ -30,8 +30,11 @@ describe('GetVodsByChannelUseCase', () => {
     const result = await getVodsByChannelUseCase.execute({ channelId });
 
     // Assert
-    expect(result).toHaveLength(2);
-    expect(result).toEqual(expect.arrayContaining([vod1, vod2]));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toHaveLength(2);
+      expect(result.value).toEqual(expect.arrayContaining([vod1, vod2]));
+    }
   });
 
   it('should return an empty array if the channel has no VODs', async () => {
@@ -42,6 +45,9 @@ describe('GetVodsByChannelUseCase', () => {
     const result = await getVodsByChannelUseCase.execute({ channelId });
 
     // Assert
-    expect(result).toHaveLength(0);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toHaveLength(0);
+    }
   });
 });
