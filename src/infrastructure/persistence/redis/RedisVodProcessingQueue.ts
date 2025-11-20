@@ -1,14 +1,12 @@
 import { Queue } from 'bullmq';
 import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
+import { getRedisConnection } from './redisConnection';
 
 export class RedisVodProcessingQueue implements IVodProcessingQueue {
   private queue: Queue;
 
   constructor() {
-    const connection = {
-      host: process.env.REDIS_URL ? new URL(process.env.REDIS_URL).hostname : 'localhost',
-      port: process.env.REDIS_URL ? parseInt(new URL(process.env.REDIS_URL).port) : 6379,
-    };
+    const connection = getRedisConnection();
 
     this.queue = new Queue('vod-processing', { connection });
 

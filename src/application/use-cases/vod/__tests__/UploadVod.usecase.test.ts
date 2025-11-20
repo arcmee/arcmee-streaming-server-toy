@@ -1,13 +1,27 @@
 import { UploadVodUseCase } from '../UploadVod.usecase';
 import { FakeVodProcessingQueue } from '@src/tests/fakes/FakeVodProcessingQueue';
+import { FakeStreamRepository } from '@src/tests/fakes/FakeStreamRepository';
+import { Stream } from '@src/domain/entities/stream.entity';
 
 describe('UploadVodUseCase', () => {
   let uploadVodUseCase: UploadVodUseCase;
   let fakeVodProcessingQueue: FakeVodProcessingQueue;
+  let fakeStreamRepository: FakeStreamRepository;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     fakeVodProcessingQueue = new FakeVodProcessingQueue();
-    uploadVodUseCase = new UploadVodUseCase(fakeVodProcessingQueue);
+    fakeStreamRepository = new FakeStreamRepository();
+    uploadVodUseCase = new UploadVodUseCase(fakeVodProcessingQueue, fakeStreamRepository);
+
+    const stream = new Stream({
+      id: 'stream-123',
+      userId: 'user-123',
+      title: 'Test Stream',
+      description: '',
+      isLive: false,
+      thumbnailUrl: null,
+    });
+    await fakeStreamRepository.create(stream);
   });
 
   it('should add a VOD processing job to the queue', async () => {
@@ -26,6 +40,9 @@ describe('UploadVodUseCase', () => {
     // Assert
     expect(result.ok).toBe(true);
     expect(fakeVodProcessingQueue.jobs).toHaveLength(1);
-    expect(fakeVodProcessingQueue.jobs[0]).toEqual(dto);
+    expect(fakeVodProcessingQueue.jobs[0]).toEqual({
+      streamId: 'stream-123',
+      recordedFilePath: dto.originalPath,
+    });
   });
 });
