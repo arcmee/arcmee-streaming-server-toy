@@ -12,6 +12,11 @@ export class StreamController {
   async handleNmsWebhook(req: Request, res: Response): Promise<void> {
     const { streamKey, event } = req.body;
 
+    if (typeof streamKey !== 'string' || typeof event !== 'string') {
+      res.status(400).json({ message: 'Invalid payload.' });
+      return;
+    }
+
     // We are interested in 'done_publish' (stream ends) and 'post_publish' (stream starts)
     if (event !== 'post_publish' && event !== 'done_publish') {
       res.status(204).send(); // No content, we don't care about other events
