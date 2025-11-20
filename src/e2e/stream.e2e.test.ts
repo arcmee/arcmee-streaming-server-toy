@@ -2,12 +2,11 @@ import request from 'supertest';
 import { Express } from 'express';
 import { prisma } from '../infrastructure/persistence/postgres/client';
 import { createApp } from '../app';
-import { User } from '@prisma/client';
 import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
 
 describe('Stream API (E2E)', () => {
   let app: Express;
-  let user1: User, user2: User;
+  let user1: any, user2: any;
   let vodProcessingQueue: IVodProcessingQueue;
 
   beforeAll(async () => {

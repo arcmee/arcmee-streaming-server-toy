@@ -42,7 +42,10 @@ export class StreamController {
 
   async getLiveStreams(req: Request, res: Response): Promise<void> {
     const result = await this.getLiveStreamsUseCase.execute();
-    // This use case never returns an error, so we can safely access the value.
-    res.status(200).json(result.value);
+    if (result.ok) {
+      res.status(200).json(result.value);
+    } else {
+      res.status(500).json({ message: 'Failed to fetch live streams.' });
+    }
   }
 }

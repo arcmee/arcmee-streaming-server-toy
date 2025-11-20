@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
+import { IVodProcessingQueue, VodProcessingJob } from '@src/domain/repositories/IVodProcessingQueue';
 import { getRedisConnection } from './redisConnection';
 
 export class RedisVodProcessingQueue implements IVodProcessingQueue {
@@ -11,13 +11,13 @@ export class RedisVodProcessingQueue implements IVodProcessingQueue {
     this.queue = new Queue('vod-processing', { connection });
 
     this.queue.on('error', (error) => {
-        console.error('Redis Queue Error:', error);
+      console.error('Redis Queue Error:', error);
     });
 
     console.log('RedisVodProcessingQueue initialized');
   }
 
-  async add(job: { streamId: string; videoUrl: string }): Promise<void> {
+  async add(job: VodProcessingJob): Promise<void> {
     await this.queue.add('process-vod', job);
   }
 

@@ -41,8 +41,10 @@ export class VodController {
   async getVodsByChannel(req: AuthenticatedRequest, res: Response): Promise<Response> {
     const { channelId } = req.params;
     const result = await this.getVodsByChannelUseCase.execute({ channelId });
-    // This use case never returns an error, so we can safely access the value.
-    return res.status(200).json(result.value);
+    if (result.ok) {
+      return res.status(200).json(result.value);
+    }
+    return res.status(500).json({ message: 'Failed to fetch VODs.' });
   }
 
   async getVodById(req: AuthenticatedRequest, res: Response): Promise<Response> {
