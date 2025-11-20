@@ -1,4 +1,9 @@
+export interface VodProcessingJob {
+  streamId: string;
+  recordedFilePath: string;
+}
+
 export interface IVodProcessingQueue {
-  add(job: { streamId: string; videoUrl: string }): Promise<void>;
+  add(job: VodProcessingJob): Promise<void>;
   close(): Promise<void>;
 }

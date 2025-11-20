@@ -55,7 +55,7 @@ export async function createApp() {
   const sendMessageUseCase = new SendMessageUseCase(chatRepository, userRepository);
   const getVodsByChannelUseCase = new GetVodsByChannelUseCase(vodRepository);
   const getVodUseCase = new GetVodUseCase(vodRepository);
-  const uploadVodUseCase = new UploadVodUseCase(vodProcessingQueue);
+  const uploadVodUseCase = new UploadVodUseCase(vodProcessingQueue, streamRepository);
 
   // Controllers
   const userController = new UserController(

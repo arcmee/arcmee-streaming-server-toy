@@ -1,9 +1,9 @@
-import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
+import { IVodProcessingQueue, VodProcessingJob } from '@src/domain/repositories/IVodProcessingQueue';
 
 export class FakeVodProcessingQueue implements IVodProcessingQueue {
-  public jobs: Record<string, any>[] = [];
+  public jobs: VodProcessingJob[] = [];
 
-  async add(job: Record<string, any>): Promise<void> {
+  async add(job: VodProcessingJob): Promise<void> {
     this.jobs.push(job);
   }
 

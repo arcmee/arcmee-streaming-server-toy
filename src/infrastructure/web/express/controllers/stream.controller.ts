@@ -12,6 +12,11 @@ export class StreamController {
   async handleNmsWebhook(req: Request, res: Response): Promise<void> {
     const { streamKey, event } = req.body;
 
+    if (typeof streamKey !== 'string' || typeof event !== 'string') {
+      res.status(400).json({ message: 'Invalid payload.' });
+      return;
+    }
+
     // We are interested in 'done_publish' (stream ends) and 'post_publish' (stream starts)
     if (event !== 'post_publish' && event !== 'done_publish') {
       res.status(204).send(); // No content, we don't care about other events
@@ -37,7 +42,10 @@ export class StreamController {
 
   async getLiveStreams(req: Request, res: Response): Promise<void> {
     const result = await this.getLiveStreamsUseCase.execute();
-    // This use case never returns an error, so we can safely access the value.
-    res.status(200).json(result.value);
+    if (result.ok) {
+      res.status(200).json(result.value);
+    } else {
+      res.status(500).json({ message: 'Failed to fetch live streams.' });
+    }
   }
 }

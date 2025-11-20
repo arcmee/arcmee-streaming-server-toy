@@ -5,6 +5,7 @@ import { User } from '@src/domain/entities/user.entity';
 import { DuplicateUserError } from '@src/domain/errors/user.errors';
 import { StringValue } from 'ms';
 import { UserResponseDto } from '@src/application/dtos/user/UserResponse.dto';
+import { Algorithm } from 'jsonwebtoken';
 
 describe('CreateUserUseCase', () => {
   let createUserUseCase: CreateUserUseCase;
@@ -15,7 +16,12 @@ describe('CreateUserUseCase', () => {
     fakeUserRepository = new FakeUserRepository();
     fakeStreamRepository = new FakeStreamRepository();
     const mockConfig = {
-      jwt: { secret: 'test-secret', expiresIn: '1m' as StringValue },
+      jwt: {
+        secret: 'test-secret',
+        expiresIn: '1m' as StringValue,
+        issuer: 'test-issuer',
+        algorithm: 'HS256' as Algorithm,
+      },
     };
     createUserUseCase = new CreateUserUseCase(
       fakeUserRepository,

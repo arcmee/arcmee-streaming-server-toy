@@ -27,6 +27,8 @@ export class LoginUserUseCase {
 
     const token = jwt.sign({ userId: user.id, email: user.email }, this.config.jwt.secret, {
       expiresIn: this.config.jwt.expiresIn,
+      issuer: this.config.jwt.issuer,
+      algorithm: this.config.jwt.algorithm,
     });
 
     return ok({ token });

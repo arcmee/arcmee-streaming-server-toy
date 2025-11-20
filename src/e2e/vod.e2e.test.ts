@@ -2,13 +2,12 @@ import request from 'supertest';
 import { Express } from 'express';
 import { prisma } from '../infrastructure/persistence/postgres/client';
 import { createApp } from '../app';
-import { User, VOD } from '@prisma/client';
 import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
 
 describe('VOD API (E2E)', () => {
   let app: Express;
-  let user1: User, user2: User;
-  let vod1: VOD, vod2: VOD;
+  let user1: any, user2: any;
+  let vod1: any, vod2: any;
   let vodProcessingQueue: IVodProcessingQueue;
 
   beforeAll(async () => {
@@ -102,7 +101,7 @@ describe('VOD API (E2E)', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(2);
-      expect(response.body.map((v: VOD) => v.id).sort()).toEqual([vod1.id, vod2.id].sort());
+      expect(response.body.map((v: any) => v.id).sort()).toEqual([vod1.id, vod2.id].sort());
     });
 
     it('should return an empty array for a channel with no VODs', async () => {

@@ -6,6 +6,7 @@ import { User } from '@src/domain/entities/user.entity';
 import { Stream } from '@src/domain/entities/stream.entity';
 import { UserNotFoundError } from '@src/domain/errors/user.errors';
 import { StreamNotFoundError } from '@src/domain/errors/stream.errors';
+import * as path from 'path';
 
 describe('UpdateStreamStatusUseCase', () => {
   let updateStreamStatusUseCase: UpdateStreamStatusUseCase;
@@ -82,7 +83,7 @@ describe('UpdateStreamStatusUseCase', () => {
     expect(fakeVodProcessingQueue.jobs).toHaveLength(1);
     expect(fakeVodProcessingQueue.jobs[0]).toEqual({
       streamId: testStream.id,
-      videoUrl: `path/to/recordings/${testUser.streamKey}.flv`,
+      recordedFilePath: path.join('path', 'to', 'recordings', `${testUser.streamKey}.flv`),
     });
   });
 
