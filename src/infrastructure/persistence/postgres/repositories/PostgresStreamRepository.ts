@@ -27,7 +27,7 @@ export class PostgresStreamRepository implements IStreamRepository {
     const liveStreams = await this.prisma.stream.findMany({
       where: { isLive: true },
     });
-    return liveStreams.map(this.toDomain);
+    return liveStreams.map(stream => this.toDomain(stream));
   }
 
   async create(stream: Stream): Promise<Stream> {
