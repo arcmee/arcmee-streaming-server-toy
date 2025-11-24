@@ -24,6 +24,7 @@ describe('VOD API (E2E)', () => {
 
   beforeEach(async () => {
     // Clean up the database
+    await prisma.refreshToken.deleteMany();
     await prisma.vOD.deleteMany();
     await prisma.stream.deleteMany();
     await prisma.user.deleteMany();

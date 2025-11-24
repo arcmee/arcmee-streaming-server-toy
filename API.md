@@ -34,7 +34,8 @@ Creates a new user and their associated stream channel.
       "username": "string",
       "email": "string"
     },
-    "token": "string" // JWT Token
+    "token": "string", // Access JWT
+    "refreshToken": "string" // Refresh Token
   }
   ```
 - **Error Responses:**
@@ -63,7 +64,49 @@ Authenticates a user and returns a JWT.
 - **Error Responses:**
   - `401 Unauthorized`: For invalid credentials.
 
-### 3. Get Public User Info
+### 3. Refresh Access Token
+
+Issues a new access token and rotates the refresh token.
+
+- **Method:** `POST`
+- **Endpoint:** `/api/auth/refresh`
+- **Request Body:**
+  ```json
+  {
+    "refreshToken": "string"
+  }
+  ```
+- **Success Response (200 OK):**
+  ```json
+  {
+    "token": "string",         // New access token
+    "refreshToken": "string"   // New refresh token (rotated)
+  }
+  ```
+- **Error Responses:**
+  - `401 Unauthorized`: Invalid or expired refresh token.
+  - `403 Forbidden`: Reused/revoked refresh token.
+
+### 4. Logout
+
+Revokes the provided refresh token.
+
+- **Method:** `POST`
+- **Endpoint:** `/api/auth/logout`
+- **Request Body:**
+  ```json
+  {
+    "refreshToken": "string"
+  }
+  ```
+- **Success Response (200 OK):**
+  ```json
+  { "message": "Logged out." }
+  ```
+- **Error Responses:**
+  - `401 Unauthorized`: Invalid refresh token.
+
+### 5. Get Public User Info
 
 Retrieves basic public information for a specific user.
 
@@ -80,7 +123,7 @@ Retrieves basic public information for a specific user.
 - **Error Responses:**
   - `404 Not Found`: If the user does not exist.
 
-### 4. Get Channel Info
+### 6. Get Channel Info
 
 Retrieves public channel information for a specific user, including their stream details.
 
@@ -105,7 +148,7 @@ Retrieves public channel information for a specific user, including their stream
 - **Error Responses:**
   - `404 Not Found`: If the user or stream does not exist.
 
-### 5. Get My Channel Info
+### 7. Get My Channel Info
 
 Retrieves the authenticated user's own channel information, including the private stream key.
 

@@ -29,8 +29,8 @@ export class UserController {
     const result = await this.createUserUseCase.execute({ username, email, password });
 
     if (result.ok) {
-      const { user, token } = result.value;
-      res.status(201).json({ user, token });
+      const { user, token, refreshToken } = result.value;
+      res.status(201).json({ user, token, refreshToken });
     } else {
       res.status(409).json({ message: result.error.message });
     }
