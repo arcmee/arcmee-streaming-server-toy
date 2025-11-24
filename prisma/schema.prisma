@@ -16,6 +16,7 @@ model User {
   stream       Stream?
   chatMessages ChatMessage[]
   vods         VOD[]
+  refreshTokens RefreshToken[]
 }
 
 model Stream {
@@ -53,5 +54,15 @@ model VOD {
   streamId  String
 
   user      User     @relation(fields: [userId], references: [id])
+  userId    String
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
 }

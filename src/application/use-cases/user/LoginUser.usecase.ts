@@ -5,16 +5,18 @@ import * as jwt from 'jsonwebtoken';
 import { err, ok, Result } from '@src/domain/utils/Result';
 import { InvalidCredentialsError } from '@src/domain/errors/user.errors';
 import { AppConfig } from '@src/infrastructure/config';
+import { RefreshTokenManager } from '@src/application/services/RefreshTokenManager';
 
 export class LoginUserUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly config: AppConfig,
+    private readonly refreshTokenManager: RefreshTokenManager,
   ) {}
 
   async execute(
     dto: LoginUserDto,
-  ): Promise<Result<{ token: string }, InvalidCredentialsError>> {
+  ): Promise<Result<{ token: string; refreshToken: string }, InvalidCredentialsError>> {
     const user = await this.userRepository.findByEmail(dto.email);
     if (!user) {
       return err(new InvalidCredentialsError());
@@ -31,6 +33,8 @@ export class LoginUserUseCase {
       algorithm: this.config.jwt.algorithm,
     });
 
-    return ok({ token });
+    const { token: refreshToken } = await this.refreshTokenManager.issue(user.id);
+
+    return ok({ token, refreshToken });
   }
 }

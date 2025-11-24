@@ -50,6 +50,9 @@ const worker = new Worker('vod-processing', async (job: Job<IProcessVODDTO>) => 
       // Re-throw the error to make the job fail
       throw result.error;
     }
+  } catch (error) {
+    console.error(`[Worker] Error processing job ${job.id}:`, error);
+    throw error;
   }
 }, {
   connection: connectionOptions,

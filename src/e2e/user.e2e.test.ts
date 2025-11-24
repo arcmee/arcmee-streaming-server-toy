@@ -24,6 +24,7 @@ describe('User API (E2E)', () => {
 
   beforeEach(async () => {
     // Clean up the database before each test, in dependency order
+    await prisma.refreshToken.deleteMany();
     await prisma.vOD.deleteMany();
     await prisma.stream.deleteMany();
     await prisma.user.deleteMany();
@@ -45,6 +46,7 @@ describe('User API (E2E)', () => {
       expect(response.body.user).toBeDefined();
       expect(response.body.user.email).toBe(userData.email);
       expect(response.body.token).toBeDefined();
+      expect(response.body.refreshToken).toBeDefined();
 
       // Verify user and stream were created in the database
       const dbUser = await prisma.user.findUnique({ where: { email: userData.email } });
@@ -93,6 +95,7 @@ describe('User API (E2E)', () => {
 
         expect(response.status).toBe(200);
         expect(response.body.token).toBeDefined();
+        expect(response.body.refreshToken).toBeDefined();
     });
 
     it('should return 401 for invalid credentials', async () => {
@@ -106,6 +109,32 @@ describe('User API (E2E)', () => {
             .send(loginData);
 
         expect(response.status).toBe(401);
+    });
+  });
+
+  describe('POST /api/auth/refresh', () => {
+    it('should refresh access token with a valid refresh token', async () => {
+      const registerRes = await request(app).post('/api/users/register').send({
+        email: 'refresh@example.com',
+        username: 'refreshuser',
+        password: 'password123',
+      });
+
+      const refreshRes = await request(app)
+        .post('/api/auth/refresh')
+        .send({ refreshToken: registerRes.body.refreshToken });
+
+      expect(refreshRes.status).toBe(200);
+      expect(refreshRes.body.token).toBeDefined();
+      expect(refreshRes.body.refreshToken).toBeDefined();
+    });
+
+    it('should return 401 with invalid refresh token', async () => {
+      const refreshRes = await request(app)
+        .post('/api/auth/refresh')
+        .send({ refreshToken: 'invalid.token' });
+
+      expect(refreshRes.status).toBe(401);
     });
   });
 });

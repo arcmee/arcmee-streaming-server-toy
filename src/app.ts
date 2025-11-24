@@ -24,6 +24,12 @@ import { createVodRoutes } from './infrastructure/web/express/routes/vod.routes'
 import { PostgresChatRepository } from './infrastructure/persistence/postgres/repositories/PostgresChatRepository';
 import { SendMessageUseCase } from './application/use-cases/chat/SendMessage.usecase';
 import { config } from './infrastructure/config';
+import { PostgresRefreshTokenRepository } from './infrastructure/persistence/postgres/repositories/PostgresRefreshTokenRepository';
+import { RefreshTokenManager } from './application/services/RefreshTokenManager';
+import { RefreshAccessTokenUseCase } from './application/use-cases/auth/RefreshAccessToken.usecase';
+import { LogoutUseCase } from './application/use-cases/auth/Logout.usecase';
+import { AuthController } from './infrastructure/web/express/controllers/auth.controller';
+import { createAuthRoutes } from './infrastructure/web/express/routes/auth.routes';
 
 export async function createApp() {
   const app = express();
@@ -32,10 +38,14 @@ export async function createApp() {
 
   // Repositories
   const userRepository = new PostgresUserRepository(prisma);
+  const refreshTokenRepository = new PostgresRefreshTokenRepository(prisma);
   const streamRepository = new PostgresStreamRepository(prisma);
   const chatRepository = new PostgresChatRepository(prisma);
   const vodRepository = new PostgresVodRepository(prisma);
   const vodProcessingQueue = new RedisVodProcessingQueue();
+
+  // Services
+  const refreshTokenManager = new RefreshTokenManager(refreshTokenRepository, config);
 
   // Use Cases
   const getUserUseCase = new GetUserUseCase(userRepository);
@@ -43,8 +53,9 @@ export async function createApp() {
     userRepository,
     streamRepository,
     config,
+    refreshTokenManager,
   );
-  const loginUserUseCase = new LoginUserUseCase(userRepository, config);
+  const loginUserUseCase = new LoginUserUseCase(userRepository, config, refreshTokenManager);
   const getChannelInfoUseCase = new GetChannelInfoUseCase(userRepository, streamRepository);
   const updateStreamStatusUseCase = new UpdateStreamStatusUseCase(
     userRepository,
@@ -56,6 +67,12 @@ export async function createApp() {
   const getVodsByChannelUseCase = new GetVodsByChannelUseCase(vodRepository);
   const getVodUseCase = new GetVodUseCase(vodRepository);
   const uploadVodUseCase = new UploadVodUseCase(vodProcessingQueue, streamRepository);
+  const refreshAccessTokenUseCase = new RefreshAccessTokenUseCase(
+    refreshTokenManager,
+    userRepository,
+    config,
+  );
+  const logoutUseCase = new LogoutUseCase(refreshTokenManager);
 
   // Controllers
   const userController = new UserController(
@@ -63,6 +80,11 @@ export async function createApp() {
     createUserUseCase,
     loginUserUseCase,
     getChannelInfoUseCase,
+  );
+  const authController = new AuthController(
+    loginUserUseCase,
+    refreshAccessTokenUseCase,
+    logoutUseCase,
   );
   const streamController = new StreamController(
     updateStreamStatusUseCase,
@@ -76,9 +98,11 @@ export async function createApp() {
 
   // Routes
   const userRoutes = createUserRoutes(userController);
+  const authRoutes = createAuthRoutes(authController);
   const streamRoutes = createStreamRoutes(streamController);
   const vodRoutes = createVodRoutes(vodController);
   app.use('/api/users', userRoutes);
+  app.use('/api/auth', authRoutes);
   app.use('/api/streams', streamRoutes);
   app.use('/api/vods', vodRoutes);
 

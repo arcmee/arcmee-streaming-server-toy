@@ -3,6 +3,8 @@ import * as jwt from 'jsonwebtoken';
 import { LoginUserUseCase } from '../LoginUser.usecase';
 import { FakeUserRepository } from '@src/tests/fakes/FakeUserRepository';
 import { User } from '@src/domain/entities/user.entity';
+import { FakeRefreshTokenRepository } from '@src/tests/fakes/FakeRefreshTokenRepository';
+import { RefreshTokenManager } from '@src/application/services/RefreshTokenManager';
 
 // Mock the jsonwebtoken library
 jest.mock('jsonwebtoken');
@@ -14,6 +16,8 @@ import { Algorithm } from 'jsonwebtoken';
 describe('LoginUserUseCase', () => {
   let loginUserUseCase: LoginUserUseCase;
   let fakeUserRepository: FakeUserRepository;
+  let fakeRefreshTokenRepository: FakeRefreshTokenRepository;
+  let refreshTokenManager: RefreshTokenManager;
   const mockedJwtSign = jwt.sign as jest.Mock;
   const mockConfig = {
     jwt: {
@@ -22,11 +26,18 @@ describe('LoginUserUseCase', () => {
       issuer: 'test-issuer',
       algorithm: 'HS256' as Algorithm,
     },
+    refreshToken: {
+      length: 8,
+      expiresInMs: 1000 * 60 * 60 * 24 * 30,
+      hashingRounds: 4,
+    },
   };
 
   beforeEach(async () => {
     fakeUserRepository = new FakeUserRepository();
-    loginUserUseCase = new LoginUserUseCase(fakeUserRepository, mockConfig);
+    fakeRefreshTokenRepository = new FakeRefreshTokenRepository();
+    refreshTokenManager = new RefreshTokenManager(fakeRefreshTokenRepository, mockConfig as any);
+    loginUserUseCase = new LoginUserUseCase(fakeUserRepository, mockConfig as any, refreshTokenManager);
 
     // Mock setup
     mockedJwtSign.mockReturnValue('fake-jwt-token');
@@ -58,6 +69,7 @@ describe('LoginUserUseCase', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.token).toBe('fake-jwt-token');
+      expect(result.value.refreshToken).toBeDefined();
       expect(mockedJwtSign).toHaveBeenCalledWith(
         { userId: 'user-1', email: 'test@example.com' },
         mockConfig.jwt.secret,

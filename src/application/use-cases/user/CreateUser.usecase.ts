@@ -10,17 +10,21 @@ import { DuplicateUserError } from '@src/domain/errors/user.errors';
 import { AppConfig } from '@src/infrastructure/config';
 import * as jwt from 'jsonwebtoken';
 import { UserResponseDto } from '@src/application/dtos/user/UserResponse.dto';
+import { RefreshTokenManager } from '@src/application/services/RefreshTokenManager';
 
 export class CreateUserUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly streamRepository: IStreamRepository,
     private readonly config: AppConfig,
+    private readonly refreshTokenManager: RefreshTokenManager,
   ) {}
 
   async execute(
     dto: CreateUserDto,
-  ): Promise<Result<{ user: UserResponseDto; token: string }, DuplicateUserError>> {
+  ): Promise<
+    Result<{ user: UserResponseDto; token: string; refreshToken: string }, DuplicateUserError>
+  > {
     const existingUser = await this.userRepository.findByEmail(dto.email);
     if (existingUser) {
       return err(new DuplicateUserError());
@@ -58,6 +62,8 @@ export class CreateUserUseCase {
       },
     );
 
-    return ok({ user: UserResponseDto.fromEntity(createdUser), token });
+    const { token: refreshToken } = await this.refreshTokenManager.issue(createdUser.id);
+
+    return ok({ user: UserResponseDto.fromEntity(createdUser), token, refreshToken });
   }
 }
