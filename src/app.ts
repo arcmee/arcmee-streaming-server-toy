@@ -106,5 +106,9 @@ export async function createApp() {
   app.use('/api/streams', streamRoutes);
   app.use('/api/vods', vodRoutes);
 
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
   return { app, sendMessageUseCase, vodProcessingQueue };
 }

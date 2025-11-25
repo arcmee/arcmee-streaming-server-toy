@@ -12,11 +12,15 @@ COPY package*.json ./
 COPY tsconfig.json ./
 RUN npm install
 
-# Copy source code
+# Copy source code and Prisma schema
 COPY ./src ./src
+COPY ./prisma ./prisma
+
+# Generate Prisma client at build time
+RUN npx prisma generate
 
 # Expose port
-EXPOSE 4000
+EXPOSE 3000
 
 # Command to run the application in development
 CMD ["npm", "run", "dev"]

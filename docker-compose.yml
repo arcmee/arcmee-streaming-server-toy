@@ -5,13 +5,14 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "4000:4000"
+      - "4000:3000"
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     environment:
       - DATABASE_URL=postgres://user:password@db:5432/mydatabase
       - REDIS_URL=redis://redis:6379
+    command: sh -c "npx prisma generate && npm run dev"
     depends_on:
       - db
       - redis
