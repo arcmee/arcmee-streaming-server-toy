@@ -13,7 +13,7 @@ async function main() {
   const httpServer = createServer(app);
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: '*', // In a real production app, restrict this to your frontend's URL
+      origin: 'http://localhost:3000',
     },
   });
 
