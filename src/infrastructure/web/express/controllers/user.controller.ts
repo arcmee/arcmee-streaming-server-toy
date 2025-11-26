@@ -53,7 +53,7 @@ export class UserController {
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
-    const result = await this.getChannelInfoUseCase.execute({ userId });
+    const result = await this.getChannelInfoUseCase.execute({ userId, includeStreamKey: true });
 
     if (result.ok) {
       res.status(200).json(result.value);

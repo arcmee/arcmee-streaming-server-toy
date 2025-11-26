@@ -26,6 +26,7 @@ export class GetChannelInfoUseCase {
       new ChannelInfoResponseDto({
         user: UserResponseDto.fromEntity(user),
         stream,
+        streamKey: dto.includeStreamKey ? user.streamKey : undefined,
       }),
     );
   }
