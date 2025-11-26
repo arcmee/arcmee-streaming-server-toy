@@ -10,26 +10,36 @@ export class StreamController {
 
   // This will handle webhooks from Node-Media-Server
   async handleNmsWebhook(req: Request, res: Response): Promise<void> {
-    const { streamKey, event } = req.body;
+    const { streamKey, event, stream, name, action } = req.body;
 
-    if (typeof streamKey !== 'string' || typeof event !== 'string') {
+    // Accept both our internal payload ({ streamKey, event }) and NMS defaults ({ stream/name, action })
+    const resolvedStreamKey = streamKey || stream || name;
+    const resolvedEvent =
+      event ||
+      (action === 'publish' ? 'post_publish' : undefined) ||
+      (action === 'done' ? 'done_publish' : undefined);
+
+    if (typeof resolvedStreamKey !== 'string' || typeof resolvedEvent !== 'string') {
       res.status(400).json({ message: 'Invalid payload.' });
       return;
     }
 
     // We are interested in 'done_publish' (stream ends) and 'post_publish' (stream starts)
-    if (event !== 'post_publish' && event !== 'done_publish') {
+    if (resolvedEvent !== 'post_publish' && resolvedEvent !== 'done_publish') {
       res.status(204).send(); // No content, we don't care about other events
       return;
     }
 
-    if (!streamKey) {
+    if (!resolvedStreamKey) {
       res.status(400).json({ message: 'Stream key is required.' });
       return;
     }
 
-    const isLive = event === 'post_publish';
-    const result = await this.updateStreamStatusUseCase.execute({ streamKey, isLive });
+    const isLive = resolvedEvent === 'post_publish';
+    const result = await this.updateStreamStatusUseCase.execute({
+      streamKey: resolvedStreamKey,
+      isLive,
+    });
 
     if (result.ok) {
       res.status(200).json({ message: 'Stream status updated.' });
