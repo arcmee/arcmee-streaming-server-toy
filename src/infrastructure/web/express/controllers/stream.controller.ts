@@ -21,6 +21,10 @@ export class StreamController {
       (action === 'postPublish' ? 'post_publish' : undefined) ||
       (action === 'donePublish' ? 'done_publish' : undefined);
 
+    console.log(
+      `[Webhook] received stream key=${resolvedStreamKey ?? 'unknown'} event=${resolvedEvent ?? action ?? 'unknown'}`,
+    );
+
     if (typeof resolvedStreamKey !== 'string' || typeof resolvedEvent !== 'string') {
       res.status(400).json({ message: 'Invalid payload.' });
       return;

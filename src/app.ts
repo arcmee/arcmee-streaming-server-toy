@@ -32,7 +32,6 @@ import { AuthController } from './infrastructure/web/express/controllers/auth.co
 import { createAuthRoutes } from './infrastructure/web/express/routes/auth.routes';
 import { corsMiddleware } from './infrastructure/web/express/middlewares/cors.middleware';
 import { requestLogger } from './infrastructure/web/express/middlewares/request-logger.middleware';
-import { createStreamPlayRoutes } from './infrastructure/web/express/routes/stream-play.routes';
 
 export async function createApp() {
   const app = express();
@@ -111,8 +110,6 @@ export async function createApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/streams', streamRoutes);
   app.use('/api/vods', vodRoutes);
-  // Serve HLS content (local fallback; consider CDN in production)
-  app.use('/', createStreamPlayRoutes());
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });
