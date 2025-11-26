@@ -34,12 +34,15 @@ services:
       - "6379:6379"
 
   media-server:
-    image: illuspas/node-media-server
+    build:
+      context: .
+      dockerfile: Dockerfile.media-server
     ports:
       - "1935:1935"
       - "8000:8000"
     volumes:
       - ./media-server.config.json:/node-media-server/bin/config.json
+      - ./media-live:/node-media-server/media/live
 
   tracker:
     build:

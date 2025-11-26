@@ -67,7 +67,7 @@ export async function createApp() {
     streamRepository,
     vodProcessingQueue,
   );
-  const getLiveStreamsUseCase = new GetLiveStreamsUseCase(streamRepository);
+  const getLiveStreamsUseCase = new GetLiveStreamsUseCase(streamRepository, userRepository);
   const sendMessageUseCase = new SendMessageUseCase(chatRepository, userRepository);
   const getVodsByChannelUseCase = new GetVodsByChannelUseCase(vodRepository);
   const getVodUseCase = new GetVodUseCase(vodRepository);

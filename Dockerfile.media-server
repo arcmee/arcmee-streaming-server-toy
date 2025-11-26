@@ -1,0 +1,4 @@
+FROM illuspas/node-media-server
+
+# Install ffmpeg for HLS transcoding
+RUN apk add --no-cache ffmpeg

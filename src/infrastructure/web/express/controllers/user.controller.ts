@@ -64,7 +64,7 @@ export class UserController {
 
   async getChannelInfo(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
-    const result = await this.getChannelInfoUseCase.execute({ userId: id });
+    const result = await this.getChannelInfoUseCase.execute({ userId: id, includeStreamKey: true });
 
     if (result.ok) {
       res.status(200).json(result.value);

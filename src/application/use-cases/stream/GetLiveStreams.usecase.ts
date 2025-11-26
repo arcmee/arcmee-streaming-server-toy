@@ -1,12 +1,28 @@
 import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
+import { IUserRepository } from '@src/domain/repositories/IUserRepository';
 import { Stream } from '@src/domain/entities/stream.entity';
 import { ok, Result } from '@src/domain/utils/Result';
 
-export class GetLiveStreamsUseCase {
-  constructor(private readonly streamRepository: IStreamRepository) {}
+export type LiveStreamResponse = Stream & { streamKey?: string };
 
-  async execute(): Promise<Result<Stream[], never>> {
+export class GetLiveStreamsUseCase {
+  constructor(
+    private readonly streamRepository: IStreamRepository,
+    private readonly userRepository: IUserRepository,
+  ) {}
+
+  async execute(): Promise<Result<LiveStreamResponse[], never>> {
     const liveStreams = await this.streamRepository.findAllLive();
-    return ok(liveStreams);
+    const streamsWithKeys: LiveStreamResponse[] = [];
+
+    for (const stream of liveStreams) {
+      const user = await this.userRepository.findById(stream.userId);
+      streamsWithKeys.push({
+        ...stream,
+        streamKey: user?.streamKey,
+      });
+    }
+
+    return ok(streamsWithKeys);
   }
 }

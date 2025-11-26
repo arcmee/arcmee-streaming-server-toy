@@ -21,6 +21,17 @@ export class StreamController {
       (action === 'postPublish' ? 'post_publish' : undefined) ||
       (action === 'donePublish' ? 'done_publish' : undefined);
 
+    console.log(
+      `[Webhook] received stream key=${resolvedStreamKey ?? 'unknown'} event=${resolvedEvent ?? action ?? 'unknown'}`,
+    );
+
+    // Ignore play/record notifications but return 200 to avoid NMS closing sessions
+    const passiveActions = ['prePlay', 'postPlay', 'donePlay', 'postRecord', 'doneRecord'];
+    if (passiveActions.includes(action)) {
+      res.status(200).json({ message: 'Ignored passive event.' });
+      return;
+    }
+
     if (typeof resolvedStreamKey !== 'string' || typeof resolvedEvent !== 'string') {
       res.status(400).json({ message: 'Invalid payload.' });
       return;
