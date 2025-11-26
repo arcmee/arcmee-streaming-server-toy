@@ -35,6 +35,7 @@ import { requestLogger } from './infrastructure/web/express/middlewares/request-
 
 export async function createApp() {
   const app = express();
+  app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
   app.use(corsMiddleware);
   app.use(requestLogger);

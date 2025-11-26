@@ -38,6 +38,8 @@ services:
     ports:
       - "1935:1935"
       - "8000:8000"
+    volumes:
+      - ./media-server.config.json:/node-media-server/bin/config.json
 
   tracker:
     build:
