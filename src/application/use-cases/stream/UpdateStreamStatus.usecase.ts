@@ -30,7 +30,8 @@ export class UpdateStreamStatusUseCase {
     // If the stream is stopping, add a VOD processing job to the queue.
     if (stream.isLive && !dto.isLive) {
       // In a real implementation, this path would come from the media server event payload.
-      const recordedFilePath = path.join('path', 'to', 'recordings', `${dto.streamKey}.flv`);
+      // Default to HLS master playlist location for VOD processing.
+      const recordedFilePath = path.join('path', 'to', 'recordings', `${dto.streamKey}.m3u8`);
       await this.vodProcessingQueue.add({ streamId: stream.id, recordedFilePath });
     }
 

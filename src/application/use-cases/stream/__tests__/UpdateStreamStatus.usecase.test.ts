@@ -83,7 +83,7 @@ describe('UpdateStreamStatusUseCase', () => {
     expect(fakeVodProcessingQueue.jobs).toHaveLength(1);
     expect(fakeVodProcessingQueue.jobs[0]).toEqual({
       streamId: testStream.id,
-      recordedFilePath: path.join('path', 'to', 'recordings', `${testUser.streamKey}.flv`),
+      recordedFilePath: path.join('path', 'to', 'recordings', `${testUser.streamKey}.m3u8`),
     });
   });
 
