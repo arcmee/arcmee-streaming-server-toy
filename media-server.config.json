@@ -1,0 +1,13 @@
+{
+  "rtmp": {
+    "port": 1935
+  },
+  "http": {
+    "port": 8000,
+    "allow_origin": "*"
+  },
+  "hooks": {
+    "on_publish": "http://app:3000/api/streams/webhooks",
+    "on_done": "http://app:3000/api/streams/webhooks"
+  }
+}
