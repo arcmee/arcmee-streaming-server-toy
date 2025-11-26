@@ -15,6 +15,10 @@ export class SendMessageUseCase {
   async execute(
     dto: SendMessageDto,
   ): Promise<Result<ChatMessage, UserNotFoundError>> {
+    if (!dto.userId) {
+      return err(new UserNotFoundError());
+    }
+
     const user = await this.userRepository.findById(dto.userId);
     if (!user) {
       return err(new UserNotFoundError());

@@ -17,7 +17,9 @@ export class StreamController {
     const resolvedEvent =
       event ||
       (action === 'publish' ? 'post_publish' : undefined) ||
-      (action === 'done' ? 'done_publish' : undefined);
+      (action === 'done' ? 'done_publish' : undefined) ||
+      (action === 'postPublish' ? 'post_publish' : undefined) ||
+      (action === 'donePublish' ? 'done_publish' : undefined);
 
     if (typeof resolvedStreamKey !== 'string' || typeof resolvedEvent !== 'string') {
       res.status(400).json({ message: 'Invalid payload.' });

@@ -26,6 +26,11 @@ export class ChatHandler {
       });
 
       socket.on('sendMessage', async (data: { streamId: string; text: string; userId: string }) => {
+        if (!data?.userId || !data?.streamId || !data?.text) {
+          socket.emit('error', { message: 'userId, streamId, and text are required.' });
+          return;
+        }
+
         const result = await this.sendMessageUseCase.execute(data);
 
         if (result.ok) {
