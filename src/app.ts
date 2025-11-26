@@ -30,11 +30,13 @@ import { RefreshAccessTokenUseCase } from './application/use-cases/auth/RefreshA
 import { LogoutUseCase } from './application/use-cases/auth/Logout.usecase';
 import { AuthController } from './infrastructure/web/express/controllers/auth.controller';
 import { createAuthRoutes } from './infrastructure/web/express/routes/auth.routes';
+import { corsMiddleware } from './infrastructure/web/express/middlewares/cors.middleware';
 import { requestLogger } from './infrastructure/web/express/middlewares/request-logger.middleware';
 
 export async function createApp() {
   const app = express();
   app.use(express.json());
+  app.use(corsMiddleware);
   app.use(requestLogger);
   app.use('/static', express.static(path.join(__dirname, '../public')));
 
