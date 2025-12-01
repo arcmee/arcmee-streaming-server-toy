@@ -34,7 +34,9 @@
       {
         "app": "live",
         "hls": true,
-        "hlsFlags": "[hls_time=2:hls_list_size=6:hls_flags=delete_segments]",
+        // Keep a longer rolling window (~5 minutes with 2s segments)
+        // Remove delete_segments to allow seeking within that window
+        "hlsFlags": "[hls_time=2:hls_list_size=150]",
         "dash": false
       }
     ]
