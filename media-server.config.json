@@ -32,9 +32,7 @@
     "tasks": [
       {
         "app": "live",
-        "hls": true,
-        "hlsFlags": "[hls_time=2:hls_list_size=150:hls_path=/node-media-server/media/live]",
-        "dash": false
+        "hls": true
       }
     ]
   }
