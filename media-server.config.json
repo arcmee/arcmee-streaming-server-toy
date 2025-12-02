@@ -1,5 +1,6 @@
 {
   "bind": "0.0.0.0",
+  "logType": 2,
   "auth": {
     "play": false,
     "publish": false,
@@ -15,7 +16,8 @@
   },
   "http": {
     "port": 8000,
-    "allow_origin": "*"
+    "allow_origin": "*",
+    "mediaroot": "./media"
   },
   "https": {
     "port": 8443,
@@ -30,6 +32,8 @@
     "tasks": [
       {
         "app": "live",
+        "vc": "copy",
+        "ac": "copy",
         "hls": true,
         "hlsFlags": "[hls_time=2:hls_list_size=150]",
         "dash": false
