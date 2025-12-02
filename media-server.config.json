@@ -1,6 +1,15 @@
 {
   "bind": "0.0.0.0",
-  "logType": 2,
+  "logType": 3,
+  "relay": {
+    "tasks": [
+      {
+        "app": "live",
+        "mode": "push",
+        "edge": null
+      }
+    ]
+  },
   "auth": {
     "play": false,
     "publish": false,
