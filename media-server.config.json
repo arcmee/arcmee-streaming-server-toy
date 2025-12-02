@@ -1,15 +1,6 @@
 {
   "bind": "0.0.0.0",
   "logType": 3,
-  "relay": {
-    "tasks": [
-      {
-        "app": "live",
-        "mode": "push",
-        "edge": null
-      }
-    ]
-  },
   "auth": {
     "play": false,
     "publish": false,
@@ -41,8 +32,6 @@
     "tasks": [
       {
         "app": "live",
-        "vc": "copy",
-        "ac": "copy",
         "hls": true,
         "hlsFlags": "[hls_time=2:hls_list_size=150]",
         "dash": false
