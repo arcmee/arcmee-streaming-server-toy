@@ -1,4 +1,11 @@
-FROM illuspas/node-media-server
+FROM alfg/nginx-rtmp:latest
 
-# Install ffmpeg for HLS transcoding
-RUN apk add --no-cache ffmpeg
+# Copy custom nginx config (RTMP ingest + HLS output)
+COPY media-server/nginx.conf /etc/nginx/nginx.conf
+
+# Ensure HLS output directory exists
+RUN mkdir -p /var/www/hls/live
+
+EXPOSE 1935 8000
+
+CMD ["nginx", "-g", "daemon off;"]
