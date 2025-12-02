@@ -19,3 +19,5 @@ yarn-error.log*
 
 # Uploaded files
 /uploads.env 
+/media-live/live/*
+!/media-live/live/.gitkeep
