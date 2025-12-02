@@ -33,8 +33,7 @@
       {
         "app": "live",
         "hls": true,
-        "hlsKeep": true,
-        "hlsFlags": "[hls_time=2:hls_list_size=150:hls_path=/node-media-server/media/live:hls_segment_filename=/node-media-server/media/live/%v/segment-%03d.ts]",
+        "hlsFlags": "[hls_time=2:hls_list_size=150:hls_path=/node-media-server/media/live]",
         "dash": false
       }
     ]
