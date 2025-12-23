@@ -14,6 +14,8 @@
 - Recommended approach: skip uncertain NMS v4 trans; add dedicated ffmpeg pipeline to produce HLS (`index.m3u8` + `.ts`) to a mounted volume (e.g., `./media-live/hls/<streamKey>`).
 - Serve HLS via `http://<host>:8000/live/<streamKey>/index.m3u8` (or front a simple static server/Nginx). Update clients to use HLS URLs.
 - Player: web use `hls.js` (LL-HLS-capable version); RN use `react-native-video` with HLS enabled. Consider LL-HLS tuning (short segments/parts, no-cache headers) if low latency is desired.
+- 썸네일 정상화: VOD 썸네일을 ffmpeg로 생성해 응답에 노출되도록 경로/타이밍을 점검하고 수정.
+- 방송 종료 → VOD 저장: 스트림 종료 시 녹화 파일을 HLS/메타데이터로 처리해 VOD가 자동 저장되도록 큐/워커 흐름을 확실히 처리.
 
 ## 3) RN Mobile Support
 - Playback: HLS via `react-native-video`; configure streaming/WS URLs via env/config.
