@@ -13,6 +13,7 @@ services:
       - DATABASE_URL=postgres://user:password@db:5432/mydatabase
       - REDIS_URL=redis://redis:6379
       - BASE_URL=http://localhost:4000
+      - CLIENT_ORIGIN=http://localhost:3000
     command: sh -c "npx prisma generate && npm run dev"
     depends_on:
       - db
