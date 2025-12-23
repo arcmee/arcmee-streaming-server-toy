@@ -1,8 +1,10 @@
 import { Worker, Job } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
 import { PostgresStreamRepository } from '@src/infrastructure/persistence/postgres/repositories/PostgresStreamRepository';
+import { PostgresUserRepository } from '@src/infrastructure/persistence/postgres/repositories/PostgresUserRepository';
 import { PostgresVodRepository } from '@src/infrastructure/persistence/postgres/repositories/PostgresVodRepository';
 import { ProcessVODUseCase, IProcessVODDTO } from '@src/application/use-cases/vod/ProcessVOD.usecase';
+import { CaptureLiveThumbnailUseCase, CaptureLiveThumbnailDto } from '@src/application/use-cases/stream/CaptureLiveThumbnail.usecase';
 import { FfmpegVideoProcessor } from '@src/infrastructure/media/FfmpegVideoProcessor';
 import { LocalStorage } from '@src/infrastructure/storage/LocalStorage';
 import * as path from 'path';
@@ -11,6 +13,7 @@ import { getRedisConnection } from '@src/infrastructure/persistence/redis/redisC
 // --- 1. Composition Root ---
 console.log('Initializing VOD worker dependencies...');
 const prisma = new PrismaClient();
+const userRepository = new PostgresUserRepository(prisma);
 const streamRepository = new PostgresStreamRepository(prisma);
 const vodRepository = new PostgresVodRepository(prisma);
 
@@ -19,12 +22,20 @@ const publicDir = path.join(__dirname, '../public');
 const baseUrl = process.env.BASE_URL || 'http://localhost:8000';
 const storage = new LocalStorage(publicDir, `${baseUrl}/static`);
 const videoProcessor = new FfmpegVideoProcessor();
+const liveHlsRoot = process.env.LIVE_HLS_ROOT || path.join(process.cwd(), 'media-live', 'live');
 
 const processVODUseCase = new ProcessVODUseCase(
   vodRepository,
   streamRepository,
   videoProcessor,
   storage
+);
+const captureLiveThumbnailUseCase = new CaptureLiveThumbnailUseCase(
+  streamRepository,
+  userRepository,
+  videoProcessor,
+  storage,
+  liveHlsRoot,
 );
 console.log('Dependencies initialized.');
 
@@ -59,6 +70,21 @@ const worker = new Worker('vod-processing', async (job: Job<IProcessVODDTO>) => 
   concurrency: 5, // Process up to 5 jobs concurrently
 });
 
+const liveThumbnailWorker = new Worker('live-thumbnail', async (job: Job<CaptureLiveThumbnailDto>) => {
+  try {
+    const result = await captureLiveThumbnailUseCase.execute(job.data);
+    if (!result.ok) {
+      throw result.error;
+    }
+  } catch (error) {
+    console.error(`[Worker] Live thumbnail job ${job.id} failed:`, error);
+    throw error;
+  }
+}, {
+  connection: connectionOptions,
+  concurrency: 3,
+});
+
 // --- 3. Event Listeners ---
 worker.on('completed', job => {
   console.log(`[Worker] Job ${job.id} has completed.`);
@@ -68,12 +94,18 @@ worker.on('failed', (job, err) => {
   console.error(`[Worker] Job ${job?.id} has failed with error: ${err.message}`);
 });
 
+liveThumbnailWorker.on('failed', (job, err) => {
+  console.error(`[Worker] Live thumbnail job ${job?.id} has failed with error: ${err.message}`);
+});
+
 console.log('VOD worker started and is listening for jobs on the \'vod-processing\' queue...');
+console.log('Live thumbnail worker started and is listening for jobs on the \'live-thumbnail\' queue...');
 
 // --- 4. Graceful Shutdown ---
 const gracefulShutdown = async () => {
   console.log('Closing VOD worker...');
   await worker.close();
+  await liveThumbnailWorker.close();
   await prisma.$disconnect();
   console.log('Worker closed gracefully.');
   process.exit(0);

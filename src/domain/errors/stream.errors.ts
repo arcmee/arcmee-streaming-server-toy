@@ -4,3 +4,10 @@ export class StreamNotFoundError extends Error {
     this.name = 'StreamNotFoundError';
   }
 }
+
+export class LiveThumbnailError extends Error {
+  constructor(message: string) {
+    super(`Live thumbnail error: ${message}`);
+    this.name = 'LiveThumbnailError';
+  }
+}

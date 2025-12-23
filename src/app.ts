@@ -10,11 +10,13 @@ import { CreateUserUseCase } from './application/use-cases/user/CreateUser.useca
 import { LoginUserUseCase } from './application/use-cases/user/LoginUser.usecase';
 import { GetChannelInfoUseCase } from './application/use-cases/user/GetChannelInfo.usecase';
 import { PostgresStreamRepository } from './infrastructure/persistence/postgres/repositories/PostgresStreamRepository';
+import { CaptureLiveThumbnailUseCase } from './application/use-cases/stream/CaptureLiveThumbnail.usecase';
 import { UpdateStreamStatusUseCase } from './application/use-cases/stream/UpdateStreamStatus.usecase';
 import { GetLiveStreamsUseCase } from './application/use-cases/stream/GetLiveStreams.usecase';
 import { StreamController } from './infrastructure/web/express/controllers/stream.controller';
 import { createStreamRoutes } from './infrastructure/web/express/routes/stream.routes';
 import { RedisVodProcessingQueue } from './infrastructure/persistence/redis/RedisVodProcessingQueue';
+import { RedisLiveThumbnailQueue } from './infrastructure/persistence/redis/RedisLiveThumbnailQueue';
 import { PostgresVodRepository } from './infrastructure/persistence/postgres/repositories/PostgresVodRepository';
 import { GetVodsByChannelUseCase } from './application/use-cases/vod/GetVodsByChannel.usecase';
 import { GetVodUseCase } from './application/use-cases/vod/GetVod.usecase';
@@ -32,6 +34,8 @@ import { AuthController } from './infrastructure/web/express/controllers/auth.co
 import { createAuthRoutes } from './infrastructure/web/express/routes/auth.routes';
 import { corsMiddleware } from './infrastructure/web/express/middlewares/cors.middleware';
 import { requestLogger } from './infrastructure/web/express/middlewares/request-logger.middleware';
+import { FfmpegVideoProcessor } from './infrastructure/media/FfmpegVideoProcessor';
+import { LocalStorage } from './infrastructure/storage/LocalStorage';
 
 export async function createApp() {
   const app = express();
@@ -48,6 +52,12 @@ export async function createApp() {
   const chatRepository = new PostgresChatRepository(prisma);
   const vodRepository = new PostgresVodRepository(prisma);
   const vodProcessingQueue = new RedisVodProcessingQueue();
+  const liveThumbnailQueue = new RedisLiveThumbnailQueue();
+  const videoProcessor = new FfmpegVideoProcessor();
+  const publicDir = path.join(__dirname, '../public');
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  const storage = new LocalStorage(publicDir, `${baseUrl}/static`);
+  const liveHlsRoot = process.env.LIVE_HLS_ROOT || path.join(process.cwd(), 'media-live', 'live');
 
   // Services
   const refreshTokenManager = new RefreshTokenManager(refreshTokenRepository, config);
@@ -66,6 +76,14 @@ export async function createApp() {
     userRepository,
     streamRepository,
     vodProcessingQueue,
+    liveThumbnailQueue,
+  );
+  const captureLiveThumbnailUseCase = new CaptureLiveThumbnailUseCase(
+    streamRepository,
+    userRepository,
+    videoProcessor,
+    storage,
+    liveHlsRoot,
   );
   const getLiveStreamsUseCase = new GetLiveStreamsUseCase(streamRepository, userRepository);
   const sendMessageUseCase = new SendMessageUseCase(chatRepository, userRepository);
@@ -94,6 +112,7 @@ export async function createApp() {
   const streamController = new StreamController(
     updateStreamStatusUseCase,
     getLiveStreamsUseCase,
+    captureLiveThumbnailUseCase,
   );
   const vodController = new VodController(
     getVodsByChannelUseCase,
@@ -115,5 +134,5 @@ export async function createApp() {
     res.status(200).json({ status: 'ok' });
   });
 
-  return { app, sendMessageUseCase, vodProcessingQueue };
+  return { app, sendMessageUseCase, vodProcessingQueue, liveThumbnailQueue };
 }

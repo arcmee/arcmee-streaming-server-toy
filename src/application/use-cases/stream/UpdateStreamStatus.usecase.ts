@@ -2,6 +2,7 @@ import { IUserRepository } from '@src/domain/repositories/IUserRepository';
 import { IStreamRepository } from '@src/domain/repositories/IStreamRepository';
 import { UpdateStreamStatusDto } from '@src/application/dtos/stream/UpdateStreamStatus.dto';
 import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
+import { ILiveThumbnailQueue } from '@src/domain/repositories/ILiveThumbnailQueue';
 import * as path from 'path';
 import { err, ok, Result } from '@src/domain/utils/Result';
 import { UserNotFoundError } from '@src/domain/errors/user.errors';
@@ -12,6 +13,7 @@ export class UpdateStreamStatusUseCase {
     private readonly userRepository: IUserRepository,
     private readonly streamRepository: IStreamRepository,
     private readonly vodProcessingQueue: IVodProcessingQueue,
+    private readonly liveThumbnailQueue: ILiveThumbnailQueue,
   ) {}
 
   async execute(
@@ -27,12 +29,20 @@ export class UpdateStreamStatusUseCase {
       return err(new StreamNotFoundError(`user id: ${user.id}`));
     }
 
+    if (dto.isLive) {
+      await this.liveThumbnailQueue.start({
+        streamId: stream.id,
+        streamKey: user.streamKey,
+      });
+    }
+
     // If the stream is stopping, add a VOD processing job to the queue.
     if (stream.isLive && !dto.isLive) {
       // In a real implementation, this path would come from the media server event payload.
       // Default to HLS master playlist location for VOD processing.
       const recordedFilePath = path.join('path', 'to', 'recordings', `${dto.streamKey}.m3u8`);
       await this.vodProcessingQueue.add({ streamId: stream.id, recordedFilePath });
+      await this.liveThumbnailQueue.stop(stream.id);
     }
 
     stream.isLive = dto.isLive;
