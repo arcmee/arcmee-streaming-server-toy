@@ -25,5 +25,10 @@ export const createStreamRoutes = (streamController: StreamController): Router =
   // Public route to get all live streams
   router.get('/', (req, res) => streamController.getLiveStreams(req, res));
 
+  // Force refresh live thumbnail for a stream
+  router.post('/:streamId/thumbnail/refresh', (req, res) =>
+    streamController.refreshLiveThumbnail(req, res),
+  );
+
   return router;
 };

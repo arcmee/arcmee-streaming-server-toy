@@ -3,26 +3,31 @@ import { Express } from 'express';
 import { prisma } from '../infrastructure/persistence/postgres/client';
 import { createApp } from '../app';
 import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
+import { ILiveThumbnailQueue } from '@src/domain/repositories/ILiveThumbnailQueue';
 
 describe('Stream API (E2E)', () => {
   let app: Express;
   let user1: any, user2: any;
   let vodProcessingQueue: IVodProcessingQueue;
+  let liveThumbnailQueue: ILiveThumbnailQueue;
 
   beforeAll(async () => {
     await prisma.$connect();
     const createdApp = await createApp();
     app = createdApp.app;
     vodProcessingQueue = createdApp.vodProcessingQueue;
+    liveThumbnailQueue = createdApp.liveThumbnailQueue;
   });
 
   afterAll(async () => {
     await vodProcessingQueue.close();
+    await liveThumbnailQueue.close();
     await prisma.$disconnect();
   });
 
   beforeEach(async () => {
     // Clean up the database
+    await prisma.chatMessage.deleteMany();
     await prisma.vOD.deleteMany();
     await prisma.stream.deleteMany();
     await prisma.user.deleteMany();

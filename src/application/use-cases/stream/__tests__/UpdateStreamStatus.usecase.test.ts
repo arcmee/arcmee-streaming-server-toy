@@ -2,6 +2,7 @@ import { UpdateStreamStatusUseCase } from '../UpdateStreamStatus.usecase';
 import { FakeUserRepository } from '@src/tests/fakes/FakeUserRepository';
 import { FakeStreamRepository } from '@src/tests/fakes/FakeStreamRepository';
 import { FakeVodProcessingQueue } from '@src/tests/fakes/FakeVodProcessingQueue';
+import { FakeLiveThumbnailQueue } from '@src/tests/fakes/FakeLiveThumbnailQueue';
 import { User } from '@src/domain/entities/user.entity';
 import { Stream } from '@src/domain/entities/stream.entity';
 import { UserNotFoundError } from '@src/domain/errors/user.errors';
@@ -13,6 +14,7 @@ describe('UpdateStreamStatusUseCase', () => {
   let fakeUserRepository: FakeUserRepository;
   let fakeStreamRepository: FakeStreamRepository;
   let fakeVodProcessingQueue: FakeVodProcessingQueue;
+  let fakeLiveThumbnailQueue: FakeLiveThumbnailQueue;
 
   let testUser: User;
   let testStream: Stream;
@@ -21,11 +23,13 @@ describe('UpdateStreamStatusUseCase', () => {
     fakeUserRepository = new FakeUserRepository();
     fakeStreamRepository = new FakeStreamRepository();
     fakeVodProcessingQueue = new FakeVodProcessingQueue();
+    fakeLiveThumbnailQueue = new FakeLiveThumbnailQueue();
 
     updateStreamStatusUseCase = new UpdateStreamStatusUseCase(
       fakeUserRepository,
       fakeStreamRepository,
       fakeVodProcessingQueue,
+      fakeLiveThumbnailQueue,
     );
 
     // Arrange: Setup a common user and stream for tests
@@ -49,6 +53,7 @@ describe('UpdateStreamStatusUseCase', () => {
     await fakeStreamRepository.create(testStream);
 
     fakeVodProcessingQueue.clear(); // Clear jobs before each test
+    fakeLiveThumbnailQueue.clear();
   });
 
   it('should update stream status to live when stream starts', async () => {
@@ -63,6 +68,12 @@ describe('UpdateStreamStatusUseCase', () => {
     const streamInRepo = await fakeStreamRepository.findById(testStream.id);
     expect(streamInRepo?.isLive).toBe(true);
     expect(fakeVodProcessingQueue.jobs).toHaveLength(0);
+    expect(fakeLiveThumbnailQueue.starts).toHaveLength(1);
+    expect(fakeLiveThumbnailQueue.starts[0]).toEqual({
+      streamId: testStream.id,
+      streamKey: testUser.streamKey,
+    });
+    expect(fakeLiveThumbnailQueue.stops).toHaveLength(0);
   });
 
   it('should update stream status to not live and add VOD job when stream ends', async () => {
@@ -85,6 +96,7 @@ describe('UpdateStreamStatusUseCase', () => {
       streamId: testStream.id,
       recordedFilePath: path.join('path', 'to', 'recordings', `${testUser.streamKey}.m3u8`),
     });
+    expect(fakeLiveThumbnailQueue.stops).toEqual([testStream.id]);
   });
 
   it('should return a UserNotFoundError if user is not found', async () => {

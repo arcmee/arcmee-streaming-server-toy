@@ -141,7 +141,8 @@ Retrieves public channel information for a specific user, including their stream
         "id": "string",
         "title": "string",
         "description": "string",
-        "isLive": boolean
+        "isLive": boolean,
+        "thumbnailUrl": "string | null"
     }
   }
   ```
@@ -189,6 +190,32 @@ Retrieves a list of all currently live streams.
     }
   ]
   ```
+
+### 2. Refresh Live Thumbnail
+
+Forces a live thumbnail capture for a stream. Useful for updating stale thumbnails.
+
+- **Method:** `POST`
+- **Endpoint:** `/api/streams/:streamId/thumbnail/refresh`
+- **Request Body (optional):**
+  ```json
+  {
+    "streamKey": "string"
+  }
+  ```
+- **Success Response (200 OK):**
+  ```json
+  {
+    "thumbnailUrl": "string"
+  }
+  ```
+- **Accepted Response (202 Accepted):**
+  ```json
+  { "message": "Thumbnail capture skipped." }
+  ```
+- **Error Responses:**
+  - `404 Not Found`: If the stream does not exist.
+  - `500 Internal Server Error`: For other server-side errors.
 
 ---
 

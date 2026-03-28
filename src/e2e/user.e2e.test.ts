@@ -3,10 +3,12 @@ import { Express } from 'express';
 import { prisma } from '../infrastructure/persistence/postgres/client';
 import { createApp } from '../app';
 import { IVodProcessingQueue } from '@src/domain/repositories/IVodProcessingQueue';
+import { ILiveThumbnailQueue } from '@src/domain/repositories/ILiveThumbnailQueue';
 
 describe('User API (E2E)', () => {
   let app: Express;
   let vodProcessingQueue: IVodProcessingQueue;
+  let liveThumbnailQueue: ILiveThumbnailQueue;
 
   beforeAll(async () => {
     // Connect to the database before running tests
@@ -14,17 +16,20 @@ describe('User API (E2E)', () => {
     const createdApp = await createApp();
     app = createdApp.app;
     vodProcessingQueue = createdApp.vodProcessingQueue;
+    liveThumbnailQueue = createdApp.liveThumbnailQueue;
   });
 
   afterAll(async () => {
     // Disconnect from the database after all tests
     await vodProcessingQueue.close();
+    await liveThumbnailQueue.close();
     await prisma.$disconnect();
   });
 
   beforeEach(async () => {
     // Clean up the database before each test, in dependency order
     await prisma.refreshToken.deleteMany();
+    await prisma.chatMessage.deleteMany();
     await prisma.vOD.deleteMany();
     await prisma.stream.deleteMany();
     await prisma.user.deleteMany();

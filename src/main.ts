@@ -13,7 +13,7 @@ async function main() {
   const httpServer = createServer(app);
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: 'http://localhost:3000',
+      origin: process.env.CLIENT_ORIGIN || 'http://localhost:4000',
     },
   });
 
